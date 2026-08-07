@@ -583,7 +583,7 @@ export default function AppPlusPathwayLab() {
   const [rates, setRates] = useState<Rates>({ ...s0.rates });
   const [capture, setCapture] = useState(0.85);
   const [grossPct, setGrossPct] = useState(s0.grossPct);
-  const [proposedFlat, setProposedFlat] = useState(false);
+  const [proposedFlat, setProposedFlat] = useState(true);
   const [benchmarkM, setBenchmarkM] = useState(s0.benchmarkM);
   const [track, setTrack] = useState<TrackKey>(s0.track);
   const [msr, setMsr] = useState(s0.msr);
@@ -893,11 +893,9 @@ export default function AppPlusPathwayLab() {
                 <label style={{ display: "flex", gap: 7, alignItems: "flex-start", marginTop: 8, cursor: "pointer" }}>
                   <input type="checkbox" checked={proposedFlat} onChange={(e) => setProposedFlat(e.target.checked)} style={{ marginTop: 2 }} />
                   <span style={{ fontSize: 10.5, color: T.inkSoft, lineHeight: 1.45 }}>
-                    <b>Apply pending proposed rule (not final):</b> score ALL Medicare CQM measures on flat 10-point
-                    bands, replacing the much tougher real-data benchmarks CMS published for measures 001, 134, and
-                    236 for 2026 (final decision expected November 2026). <b>This only affects Medicare CQM cells</b> —
-                    if no measure above is routed to Medicare CQM, the cards won't change, but the "All Medicare CQM"
-                    and "Best mix" rows in the comparison table will. Route a measure to M-CQM to see its ladder swap.
+                    <b>Apply pending proposed rule (on by default, not final):</b> score all Medicare CQM measures on
+                    flat 10-point bands instead of the tougher real-data 2026 benchmarks for 001/134/236 (CMS-1848-P;
+                    final decision ~November 2026) — uncheck to see current law.
                   </span>
                 </label>
                 <div style={{ marginTop: 8, fontSize: 10.5, color: T.inkSoft, lineHeight: 1.6 }}>
@@ -936,7 +934,7 @@ export default function AppPlusPathwayLab() {
               both earned points and the denominator per 42 CFR 414.1367(c)(1)(i)), measure 134 under MIPS CQM is capped at 7
               points (dashed red line), measure 001 counts a bad outcome so lower rates score higher, and the Medicare
               CQM ladders for 001, 134, and 236 are now built from real ACO submissions — far steeper in the middle
-              than the old flat bands, unless the pending proposed rule (toggle above) restores flat scoring.
+              than the old flat bands, unless the pending proposed rule (toggle above — applied by default) restores flat scoring.
             </p>
           </Panel>
 
