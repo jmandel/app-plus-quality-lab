@@ -835,7 +835,7 @@ export default function AppPlusPathwayLab() {
                 </p>
               </div>
               <div>
-                <div style={{ fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 6, minHeight: 16 }}>SPENDING VS COST BENCHMARK: <b style={{ color: grossPct >= 0 ? T.money : T.debt }}>{grossPct >= 0 ? "+" : ""}{grossPct.toFixed(1)}%</b></div>
+                <div style={{ fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 6, minHeight: 16 }}>GROSS SAVINGS RATE: <b style={{ color: grossPct >= 0 ? T.money : T.debt }}>{grossPct >= 0 ? "+" : ""}{grossPct.toFixed(1)}%</b> <span style={{ color: T.inkFaint }}>= spent {Math.abs(grossPct).toFixed(1)}% {grossPct >= 0 ? "UNDER" : "OVER"} its cost benchmark</span></div>
                 <input type="range" min={-3} max={12} step={0.1} value={grossPct} onChange={(e) => setGrossPct(+e.target.value)} style={{ width: "100%", accentColor: grossPct >= 0 ? T.money : T.debt }} aria-label="gross result" />
                 <div style={{ margin: "2px 0 4px" }}>
                   <PinRow pins={GROSS_PINS} cur={grossPct} onPick={setGrossPct} fmt={(v) => `${v >= 0 ? "+" : ""}${v}%`} color={T.money} />
