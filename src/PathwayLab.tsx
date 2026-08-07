@@ -613,13 +613,18 @@ export default function AppPlusPathwayLab() {
         input[type=range]{height:4px}
         button:focus-visible{outline:2px solid ${T.ink};outline-offset:2px}
         @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+        .lab-cols{display:flex;flex-direction:column}
+        @media (min-width:1240px){
+          .lab-cols{display:grid;grid-template-columns:minmax(400px,470px) minmax(0,1fr);gap:14px;align-items:start}
+          .lab-out{position:sticky;top:10px;max-height:calc(100vh - 20px);overflow-y:auto;padding-right:2px}
+        }
         table.cmp{border-collapse:collapse;width:100%}
         table.cmp th,table.cmp td{border:1px solid ${T.line};padding:4px 7px;font-size:10.5px;text-align:right}
         table.cmp th{background:#fff;color:${T.inkSoft};font-weight:600;text-align:right}
         table.cmp td:first-child,table.cmp th:first-child{text-align:left}
       `}</style>
       <div style={{ backgroundImage: `linear-gradient(${T.grid} 1px, transparent 1px), linear-gradient(90deg, ${T.grid} 1px, transparent 1px)`, backgroundSize: "28px 28px" }}>
-        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "26px 16px 60px" }}>
+        <div style={{ maxWidth: 1600, margin: "0 auto", padding: "26px 16px 60px" }}>
 
           {/* title block */}
           <div style={{ border: `2px solid ${T.ink}`, background: T.film, borderRadius: 4, display: "flex", flexWrap: "wrap", marginBottom: 18 }}>
@@ -643,6 +648,10 @@ export default function AppPlusPathwayLab() {
               <span>DOLLAR FIGURES: SIMPLIFIED ESTIMATES</span>
             </div>
           </div>
+
+          {/* wide screens: inputs (steps + measure cards) left, outputs (score + dollars) right */}
+          <div className="lab-cols">
+          <div className="lab-in">
 
           {/* scenario + master switch */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))", gap: 12, marginBottom: 12 }}>
@@ -818,6 +827,9 @@ export default function AppPlusPathwayLab() {
             </p>
           </Panel>
 
+          </div>
+          <div className="lab-out">
+
           {/* waterfall + rails */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))", gap: 12, marginBottom: 12 }}>
             <Panel title="How the points add up" tag={`quality score: ${mach.q.toFixed(1)} / 100`}>
@@ -904,6 +916,9 @@ export default function AppPlusPathwayLab() {
               the automatic-pass rule and the electronic reporting bonus.
             </p>
           </Panel>
+
+          </div>
+          </div>
 
           <p style={{ fontSize: 11, color: T.inkSoft, marginTop: 16, maxWidth: 920, lineHeight: 1.5 }}>
             <b>Model scope.</b> In scope: how the five reported measures are scored under each collection type
