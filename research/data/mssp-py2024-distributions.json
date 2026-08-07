@@ -1,0 +1,889 @@
+{
+ "meta": {
+  "retrieved": "2026-08-07",
+  "percentile_method": "numpy method='linear' = Hyndman-Fan Type 7 = R quantile(type=7) = Excel PERCENTILE.INC (linear interpolation between order statistics)",
+  "results_puf": {
+   "url": "https://data.cms.gov/sites/default/files/2026-07/fb6ba14b-3450-47c2-8ff5-d1f2a5bdb3e3/PY_Financial_and_Quality_Results_2024_revised%202026_07_17.csv",
+   "file_name": "PY_Financial_and_Quality_Results_2024_revised 2026_07_17.csv",
+   "bytes": 437855,
+   "dataset_modified": "2026-07-20",
+   "n_rows": 476,
+   "n_unique_aco_id": 476
+  },
+  "participants_file": {
+   "url": "https://data.cms.gov/sites/default/files/2024-01/afc09855-5e4b-4baf-bdc4-88a4459a52e5/PY2024_Medicare_Shared_Savings_Program_Participants.csv",
+   "bytes": 5832684,
+   "snapshot": "PY2024 as of 2024-01-24",
+   "n_rows": 15540,
+   "n_unique_aco_id": 480,
+   "aco_ids_in_participants_not_in_results": [
+    "A3151",
+    "A3597",
+    "A5074",
+    "A5253"
+   ]
+  }
+ },
+ "n_acos": {
+  "reconciled_in_results_puf": 476,
+  "in_participants_snapshot": 480
+ },
+ "distributions": {
+  "assigned_beneficiaries_N_AB": {
+   "p0": 2647.0,
+   "p10": 5921.0,
+   "p25": 8262.5,
+   "p50": 13151.0,
+   "p75": 24445.2,
+   "p90": 44109.5,
+   "p100": 328733.0,
+   "n": 476,
+   "mean": 21694.0
+  },
+  "assigned_beneficiary_person_years_N_AB_Year_PY": {
+   "p0": 2586.0,
+   "p10": 5802.5,
+   "p25": 8076.2,
+   "p50": 12857.5,
+   "p75": 24045.2,
+   "p90": 43283.0,
+   "p100": 321569.0,
+   "n": 476,
+   "mean": 21242.3
+  },
+  "total_updated_benchmark_dollars_ABtotBnchmk": {
+   "p0": 40511152.0,
+   "p10": 75688768.0,
+   "p25": 106022164.0,
+   "p50": 177284708.0,
+   "p75": 331406290.0,
+   "p90": 603855087.0,
+   "p100": 4322770076.0,
+   "n": 476,
+   "mean": 293582712.0
+  },
+  "total_expenditures_dollars_ABtotExp": {
+   "p0": 34850014.0,
+   "p10": 73774502.0,
+   "p25": 101343896.0,
+   "p50": 167571772.0,
+   "p75": 317135339.0,
+   "p90": 578566053.0,
+   "p100": 4149785312.0,
+   "n": 476,
+   "mean": 279687083.0
+  },
+  "per_capita_updated_benchmark_UpdatedBnchmk": {
+   "p0": 10221.0,
+   "p10": 11474.0,
+   "p25": 12115.2,
+   "p50": 13278.0,
+   "p75": 14470.5,
+   "p90": 15970.5,
+   "p100": 52115.0,
+   "n": 476,
+   "mean": 13983.1
+  },
+  "per_capita_historical_benchmark_HistBnchmk": {
+   "p0": 8752.0,
+   "p10": 9829.0,
+   "p25": 10458.8,
+   "p50": 11438.5,
+   "p75": 12531.0,
+   "p90": 13563.0,
+   "p100": 50894.0,
+   "n": 476,
+   "mean": 12079.2
+  },
+  "per_capita_PY_expenditures_Per_Capita_Exp_TOTAL_PY": {
+   "p0": 9440.0,
+   "p10": 10757.5,
+   "p25": 11516.0,
+   "p50": 12691.0,
+   "p75": 13831.2,
+   "p90": 15285.0,
+   "p100": 52725.0,
+   "n": 476,
+   "mean": 13282.6
+  },
+  "gross_savings_rate_pct_Sav_rate": {
+   "p0": -10.72,
+   "p10": -0.4,
+   "p25": 2.002,
+   "p50": 4.215,
+   "p75": 7.027,
+   "p90": 10.36,
+   "p100": 22.13,
+   "n": 476,
+   "mean": 4.758
+  },
+  "gross_savings_rate_pct_derived_from_totals": {
+   "p0": -10.721,
+   "p10": -0.402,
+   "p25": 2.0,
+   "p50": 4.215,
+   "p75": 7.03,
+   "p90": 10.361,
+   "p100": 22.128,
+   "n": 476,
+   "mean": 4.758
+  },
+  "quality_score_QualScore": {
+   "p0": 34.29,
+   "p10": 71.81,
+   "p25": 77.05,
+   "p50": 83.11,
+   "p75": 88.12,
+   "p90": 91.78,
+   "p100": 98.69,
+   "n": 476,
+   "mean": 81.9
+  },
+  "participant_rows_per_aco_PY2024_file": {
+   "p0": 1.0,
+   "p10": 2.5,
+   "p25": 7.0,
+   "p50": 19.0,
+   "p75": 37.2,
+   "p90": 80.0,
+   "p100": 509.0,
+   "n": 476,
+   "mean": 32.6
+  },
+  "participant_distinct_LBN_per_aco_PY2024_file": {
+   "p0": 1.0,
+   "p10": 2.5,
+   "p25": 7.0,
+   "p50": 19.0,
+   "p75": 37.2,
+   "p90": 79.5,
+   "p100": 508.0,
+   "n": 476,
+   "mean": 32.5
+  },
+  "participant_rows_per_aco_all_480": {
+   "p0": 1.0,
+   "p10": 2.0,
+   "p25": 7.0,
+   "p50": 19.0,
+   "p75": 37.0,
+   "p90": 80.0,
+   "p100": 509.0,
+   "n": 480,
+   "mean": 32.4
+  },
+  "per_capita_part_b_physician_supplier_CapAnn_PB": {
+   "p0": 1814.0,
+   "p10": 3047.0,
+   "p25": 3587.2,
+   "p50": 4332.0,
+   "p75": 5124.0,
+   "p90": 5969.0,
+   "p100": 9356.0,
+   "n": 476,
+   "mean": 4407.1
+  },
+  "per_capita_outpatient_CapAnn_OPD": {
+   "p0": 1284.0,
+   "p10": 2161.0,
+   "p25": 2460.5,
+   "p50": 3077.0,
+   "p75": 3801.5,
+   "p90": 4606.5,
+   "p100": 8861.0,
+   "n": 476,
+   "mean": 3249.3
+  },
+  "gross_savings_loss_dollars_GenSaveLoss": {
+   "p0": -11018475.0,
+   "p10": 0.0,
+   "p25": 413636.0,
+   "p50": 6985124.0,
+   "p75": 16347177.0,
+   "p90": 37703103.0,
+   "p100": 172984764.0,
+   "n": 476,
+   "mean": 13753436.0
+  },
+  "earned_shared_savings_loss_dollars_EarnSaveLoss": {
+   "p0": -3302077.0,
+   "p10": 0.0,
+   "p25": 81618.0,
+   "p50": 3716198.0,
+   "p75": 9067544.0,
+   "p90": 23047107.0,
+   "p100": 127143802.0,
+   "n": 476,
+   "mean": 8660681.0
+  },
+  "n_pcp_per_aco_N_PCP": {
+   "p0": 13.0,
+   "p10": 54.0,
+   "p25": 98.5,
+   "p50": 206.0,
+   "p75": 428.0,
+   "p90": 747.0,
+   "p100": 7044.0,
+   "n": 476,
+   "mean": 385.1
+  },
+  "n_specialist_per_aco_N_Spec": {
+   "p0": 0.0,
+   "p10": 11.0,
+   "p25": 78.2,
+   "p50": 297.0,
+   "p75": 883.0,
+   "p90": 1714.0,
+   "p100": 15223.0,
+   "n": 476,
+   "mean": 731.7
+  },
+  "n_np_per_aco_N_NP": {
+   "p0": 4.0,
+   "p10": 45.5,
+   "p25": 96.0,
+   "p50": 214.5,
+   "p75": 428.2,
+   "p90": 860.5,
+   "p100": 6870.0,
+   "n": 476,
+   "mean": 374.6
+  },
+  "n_pa_per_aco_N_PA": {
+   "p0": 0.0,
+   "p10": 14.5,
+   "p25": 35.0,
+   "p50": 88.0,
+   "p75": 215.5,
+   "p90": 445.0,
+   "p100": 4404.0,
+   "n": 476,
+   "mean": 199.9
+  }
+ },
+ "validation": {
+  "sav_rate_vs_derived_abs_diff_pp": {
+   "max": 0.005,
+   "median": 0.0024,
+   "n_over_0.05pp": 0
+  },
+  "sum_ABtotBnchmk": 139745370823.0,
+  "sum_ABtotExp": 133131051324.0,
+  "sum_N_AB": 10326340,
+  "sum_GenSaveLoss": 6546635453.0,
+  "sum_EarnSaveLoss": 4122484301.0,
+  "aggregate_gross_savings_rate_pct": 4.733,
+  "weighted_mean_per_capita_benchmark": 13820.6
+ },
+ "track_mix": {
+  "by_current_track": {
+   "ENHANCED (two-sided)": {
+    "code": "EN",
+    "n": 205,
+    "pct_of_acos": 43.1
+   },
+   "BASIC Level E (two-sided)": {
+    "code": "E",
+    "n": 104,
+    "pct_of_acos": 21.8
+   },
+   "BASIC Level B (one-sided)": {
+    "code": "B",
+    "n": 103,
+    "pct_of_acos": 21.6
+   },
+   "BASIC Level A (one-sided)": {
+    "code": "A",
+    "n": 54,
+    "pct_of_acos": 11.3
+   },
+   "BASIC Level C (two-sided)": {
+    "code": "C",
+    "n": 5,
+    "pct_of_acos": 1.1
+   },
+   "BASIC Level D (two-sided)": {
+    "code": "D",
+    "n": 5,
+    "pct_of_acos": 1.1
+   }
+  },
+  "enhanced_vs_basic": {
+   "ENHANCED": {
+    "n": 205,
+    "pct": 43.1
+   },
+   "BASIC": {
+    "n": 271,
+    "pct": 56.9
+   }
+  },
+  "risk_model": {
+   "Two-Sided": {
+    "n": 319,
+    "pct": 67.0
+   },
+   "One-Sided": {
+    "n": 157,
+    "pct": 33.0
+   }
+  },
+  "assignment_type": {
+   "Retrospective": {
+    "n": 328,
+    "pct": 68.9
+   },
+   "Prospective": {
+    "n": 148,
+    "pct": 31.1
+   }
+  },
+  "revenue_category_Rev_Exp_Cat": {
+   "Low Revenue": {
+    "n": 274,
+    "pct": 57.6
+   },
+   "High Revenue": {
+    "n": 202,
+    "pct": 42.4
+   }
+  },
+  "agreement_type": {
+   "Renewal": {
+    "n": 298,
+    "pct": 62.6
+   },
+   "Initial": {
+    "n": 128,
+    "pct": 26.9
+   },
+   "Re-entering": {
+    "n": 50,
+    "pct": 10.5
+   }
+  },
+  "risk_model_beneficiary_weighted": {
+   "Two-Sided": {
+    "assigned_benes": 7658259,
+    "pct_of_benes": 74.2
+   },
+   "One-Sided": {
+    "assigned_benes": 2668081,
+    "pct_of_benes": 25.8
+   }
+  },
+  "enhanced_vs_basic_beneficiary_weighted": {
+   "ENHANCED": {
+    "assigned_benes": 5584151,
+    "pct_of_benes": 54.1
+   },
+   "BASIC": {
+    "assigned_benes": 4742189,
+    "pct_of_benes": 45.9
+   }
+  }
+ },
+ "quality": {
+  "QualScore": {
+   "p0": 34.29,
+   "p5": 63.18,
+   "p10": 71.81,
+   "p25": 77.05,
+   "p40": 81.42,
+   "p50": 83.11,
+   "p60": 85.21,
+   "p75": 88.12,
+   "p90": 91.78,
+   "p95": 93.75,
+   "p100": 98.69,
+   "n": 476,
+   "mean": 81.9
+  },
+  "sd": 9.45,
+  "met_QPS_Met_QPS": {
+   "1": 447,
+   "0": 29
+  },
+  "met_40th_percentile_Met_40pctl": {
+   "1": 390,
+   "0": 86
+  },
+  "met_alt_QPS_Met_AltQPS_eq_1": 29,
+  "met_reporting_requirements": {
+   "1": 471,
+   "0": 5
+  },
+  "recvd_40p_EUC_floor_Recvd40p_eq_1": 35,
+  "histogram_5pt_bins": {
+   "30-35": 1,
+   "35-40": 1,
+   "40-45": 1,
+   "45-50": 1,
+   "50-55": 9,
+   "55-60": 7,
+   "60-65": 5,
+   "65-70": 13,
+   "70-75": 29,
+   "75-80": 95,
+   "80-85": 117,
+   "85-90": 121,
+   "90-95": 62,
+   "95-100": 14
+  },
+  "reporting_mechanism_Report_eCQM_CQM_MedicareCQM": {
+   "0": 309,
+   "1": 167
+  },
+  "reporting_mechanism_Report_WI": {
+   "1": 392,
+   "0": 84
+  },
+  "qualscore_by_reporting_mechanism": {
+   "web_interface_only": {
+    "p25": 80.42,
+    "p50": 84.29,
+    "p75": 88.79,
+    "n": 301,
+    "mean": 84.08
+   },
+   "both_web_interface_and_digital": {
+    "p25": 81.8,
+    "p50": 85.62,
+    "p75": 89.46,
+    "n": 91,
+    "mean": 85.36
+   },
+   "digital_only_eCQM_MIPSCQM_MedicareCQM": {
+    "p25": 60.66,
+    "p50": 74.58,
+    "p75": 77.05,
+    "n": 76,
+    "mean": 69.62,
+    "n_euc_floored_at_77.05": 16
+   },
+   "neither": {
+    "p25": 77.05,
+    "p50": 77.05,
+    "p75": 77.05,
+    "n": 8,
+    "mean": 77.05
+   }
+  },
+  "qualscore_by_track": {
+   "EN": {
+    "p25": 80.64,
+    "p50": 85.46,
+    "p75": 89.99,
+    "n": 205,
+    "mean": 84.23
+   },
+   "E": {
+    "p25": 79.51,
+    "p50": 83.89,
+    "p75": 89.43,
+    "n": 104,
+    "mean": 82.83
+   },
+   "D": {
+    "p25": 79.0,
+    "p50": 80.65,
+    "p75": 85.23,
+    "n": 5,
+    "mean": 80.94
+   },
+   "C": {
+    "p25": 73.44,
+    "p50": 76.88,
+    "p75": 79.78,
+    "n": 5,
+    "mean": 76.34
+   },
+   "B": {
+    "p25": 77.68,
+    "p50": 82.13,
+    "p75": 85.39,
+    "n": 103,
+    "mean": 81.37
+   },
+   "A": {
+    "p25": 70.86,
+    "p50": 77.05,
+    "p75": 80.29,
+    "n": 54,
+    "mean": 72.87
+   }
+  },
+  "euc_40th_percentile_floor": {
+   "py2024_40th_percentile_MIPS_quality_score": 77.05,
+   "n_acos_with_QualScore_exactly_77.05": 35,
+   "all_of_which_have_Recvd40p_eq_1": true,
+   "effect": "The EUC policy floors an affected ACO's quality score at the 40th-percentile value, producing an artificial mode at 77.05 (35 of 476 ACOs = 7.4%). Any distribution fit to QualScore must account for this spike.",
+   "source": "https://www.cms.gov/files/document/medicare-shared-savings-program-health-equity-adjusted-quality-performance-score-equates-40th.pdf",
+   "py2026_40th_percentile_for_comparison": 73.85,
+   "py2026_source": "https://www.cms.gov/files/document/medicare-shared-savings-program-quality-performance-standard-performance-year-2026-40th-percentile.pdf"
+  },
+  "qualscore_excluding_euc_floored": {
+   "all_acos": {
+    "p25": 79.07,
+    "p50": 83.71,
+    "p75": 88.38,
+    "n": 441,
+    "mean": 82.28
+   },
+   "digital_only_acos": {
+    "p25": 58.21,
+    "p50": 70.97,
+    "p75": 76.21,
+    "n": 60,
+    "mean": 67.64
+   },
+   "note": "Excludes the 35 ACOs whose score was floored at the PY2024 40th percentile (77.05) by the Quality EUC policy."
+  },
+  "qps_pathways": {
+   "note": "Exact partition of all 476 ACOs; only four (Met_QPS,Met_AltQPS,Met_40pctl,Recvd40p) combinations occur.",
+   "scored_at_or_above_40th_pct_organically": 355,
+   "euc_floored_up_to_77.05": 35,
+   "below_40th_pct_but_met_qps_via_incentive_or_first_year": {
+    "total": 57,
+    "incentive_only": 30,
+    "first_year_only": 18,
+    "both": 9
+   },
+   "failed_qps_met_alternative_qps": 29,
+   "totals": {
+    "Met_QPS_1": 447,
+    "Met_QPS_0": 29,
+    "Met_40pctl_1": 390,
+    "Met_Incentive_1": 122,
+    "Met_FirstYear_1": 59
+   }
+  }
+ },
+ "part_b_magnitude": {
+  "note": "CapAnn_PB = annualized, truncated, weighted mean expenditures per assigned beneficiary person-year for Part B physician/supplier (Carrier) services, claim types 71/72. It measures spend ON the ACO's assigned beneficiaries by any provider, not revenue billed BY the ACO.",
+  "per_capita_CapAnn_PB": {
+   "p0": 1814.0,
+   "p10": 3047.0,
+   "p25": 3587.2,
+   "p50": 4332.0,
+   "p75": 5124.0,
+   "p90": 5969.0,
+   "p100": 9356.0,
+   "n": 476,
+   "mean": 4407.1
+  },
+  "CapAnn_PB_as_pct_of_Per_Capita_Exp_TOTAL_PY": {
+   "p0": 13.03,
+   "p10": 23.62,
+   "p25": 28.25,
+   "p50": 33.43,
+   "p75": 40.0,
+   "p90": 43.74,
+   "p100": 57.59,
+   "n": 476,
+   "mean": 33.84
+  },
+  "implied_total_part_b_carrier_dollars_per_aco": {
+   "p0": 10688892.0,
+   "p10": 22792606.0,
+   "p25": 32747953.0,
+   "p50": 57751112.0,
+   "p75": 107436786.0,
+   "p90": 194492677.0,
+   "p100": 1237075943.0,
+   "n": 476,
+   "mean": 92645410.0
+  },
+  "aggregate_CapAnn_PB_dollars_all_acos": 44099215332.0,
+  "revenue_category_definition": "Rev_Exp_Cat: 'High Revenue' if ACO participants' total Medicare Parts A+B FFS revenue >= 35% of total Parts A+B FFS expenditures for the ACO's assigned beneficiaries; otherwise 'Low Revenue'. The underlying ratio is NOT published.",
+  "revenue_category_counts": {
+   "Low Revenue": {
+    "n": 274,
+    "pct": 57.6
+   },
+   "High Revenue": {
+    "n": 202,
+    "pct": 42.4
+   }
+  },
+  "rev_cat_by_track": {
+   "Low Revenue": {
+    "EN": 122,
+    "E": 67,
+    "B": 41,
+    "C": 4,
+    "D": 5,
+    "A": 35
+   },
+   "High Revenue": {
+    "EN": 83,
+    "E": 37,
+    "B": 62,
+    "A": 19,
+    "C": 1
+   }
+  },
+  "median_N_AB_by_rev_cat": {
+   "Low Revenue": 12028.5,
+   "High Revenue": 15766.5
+  }
+ },
+ "savings_rate_by_subgroup": {
+  "Rev_Exp_Cat": {
+   "Low Revenue": {
+    "p25": 2.652,
+    "p50": 5.105,
+    "p75": 8.275,
+    "n": 274,
+    "mean": 5.855
+   },
+   "High Revenue": {
+    "p25": 0.83,
+    "p50": 3.245,
+    "p75": 5.575,
+    "n": 202,
+    "mean": 3.27
+   }
+  },
+  "Risk_Model": {
+   "Two-Sided": {
+    "p25": 2.44,
+    "p50": 5.09,
+    "p75": 7.875,
+    "n": 319,
+    "mean": 5.526
+   },
+   "One-Sided": {
+    "p25": 0.94,
+    "p50": 2.95,
+    "p75": 5.15,
+    "n": 157,
+    "mean": 3.198
+   }
+  },
+  "Current_Track": {
+   "EN": {
+    "p25": 2.45,
+    "p50": 5.09,
+    "p75": 7.88,
+    "n": 205,
+    "mean": 5.831
+   },
+   "E": {
+    "p25": 2.103,
+    "p50": 4.72,
+    "p75": 7.797,
+    "n": 104,
+    "mean": 4.881
+   },
+   "B": {
+    "p25": 1.04,
+    "p50": 3.44,
+    "p75": 5.65,
+    "n": 103,
+    "mean": 3.437
+   },
+   "A": {
+    "p25": 0.81,
+    "p50": 2.59,
+    "p75": 4.393,
+    "n": 54,
+    "mean": 2.74
+   },
+   "C": {
+    "p25": 5.35,
+    "p50": 5.46,
+    "p75": 7.53,
+    "n": 5,
+    "mean": 6.04
+   },
+   "D": {
+    "p25": 4.91,
+    "p50": 5.28,
+    "p75": 7.66,
+    "n": 5,
+    "mean": 5.916
+   }
+  },
+  "Assign_Type": {
+   "Retrospective": {
+    "p25": 2.728,
+    "p50": 4.945,
+    "p75": 7.89,
+    "n": 328,
+    "mean": 5.475
+   },
+   "Prospective": {
+    "p25": 0.57,
+    "p50": 2.65,
+    "p75": 5.275,
+    "n": 148,
+    "mean": 3.169
+   }
+  }
+ },
+ "aggregates": {
+  "n_acos": 476,
+  "total_assigned_beneficiaries_sum_N_AB": 10326340,
+  "total_assigned_person_years_sum_N_AB_Year_PY": 10111347.0,
+  "total_updated_benchmark_dollars": 139745370823.0,
+  "total_expenditure_dollars": 133131051324.0,
+  "aggregate_gross_savings_dollars": 6614319499.0,
+  "aggregate_gross_savings_rate_pct": 4.733,
+  "total_earned_shared_savings_dollars": 4142450738.0,
+  "total_shared_losses_owed_dollars": -19966437.0,
+  "net_savings_to_medicare_dollars": 2491835198.0,
+  "gross_per_capita_savings_per_person_year": 654.15,
+  "net_per_capita_savings_per_person_year": 246.44,
+  "n_acos_earning_shared_savings": 360,
+  "pct_acos_earning_shared_savings": 75.6,
+  "pct_of_assigned_benes_in_acos_earning_savings": 80.1,
+  "n_acos_owing_losses": 16,
+  "n_acos_zero_settlement": 100,
+  "n_acos_with_positive_gross_savings_rate": 422
+ },
+ "fact_sheet_crosscheck": {
+  "source": "https://www.cms.gov/files/document/fact-sheet-ssp-py24-financial-quality-results.pdf",
+  "fact_sheet_date": "2025-09-29 (original results); PUF used here is the 2026-07-17 revision",
+  "checks": [
+   {
+    "item": "N ACOs",
+    "fact_sheet": "476",
+    "computed": "476",
+    "match": true
+   },
+   {
+    "item": "assigned beneficiaries",
+    "fact_sheet": "10.3 million",
+    "computed": "10,326,340",
+    "match": true
+   },
+   {
+    "item": "% ACOs earning performance payments",
+    "fact_sheet": "75%",
+    "computed": "75.6%",
+    "match": true
+   },
+   {
+    "item": "% of benes in those ACOs",
+    "fact_sheet": "80%",
+    "computed": "80.1%",
+    "match": true
+   },
+   {
+    "item": "performance payments total",
+    "fact_sheet": "$4.1 billion",
+    "computed": "$4.14 billion",
+    "match": true
+   },
+   {
+    "item": "ACOs owing losses",
+    "fact_sheet": "16 ACOs / $20.0 million",
+    "computed": "16 ACOs / $20.0 million",
+    "match": true
+   },
+   {
+    "item": "gross per capita savings",
+    "fact_sheet": "$651",
+    "computed": "$654.15",
+    "match": "close (revision drift)"
+   },
+   {
+    "item": "net per capita savings",
+    "fact_sheet": "$245",
+    "computed": "$246.44",
+    "match": "close (revision drift)"
+   },
+   {
+    "item": "net savings to Medicare",
+    "fact_sheet": "$2.5 billion",
+    "computed": "$2.49 billion",
+    "match": "close (revision drift)"
+   }
+  ]
+ },
+ "py2026_forward_mix": {
+  "note": "From the PY2026 ACO Participants file (snapshot 2026-01-01). This is the cohort the app's PY2026 model applies to; PY2026 financial results do not exist yet.",
+  "url": "https://data.cms.gov/sites/default/files/2026-01/453bc69c-61a4-4030-8d03-e33895fd1cfd/PY2026_Medicare_Shared_Savings_Program_Participants.csv",
+  "n_acos": 511,
+  "n_participant_rows": 15370,
+  "enhanced": {
+   "n": 296,
+   "pct": 57.9
+  },
+  "basic": {
+   "n": 215,
+   "pct": 42.1
+  },
+  "basic_levels": {
+   "E": 82,
+   "A": 55,
+   "B": 66,
+   "C": 9,
+   "D": 3
+  },
+  "one_sided_basic_A_or_B": {
+   "n": 121,
+   "pct": 23.7
+  },
+  "two_sided_C_D_E_ENHANCED": {
+   "n": 390,
+   "pct": 76.3
+  },
+  "high_revenue": {
+   "n": 186,
+   "pct": 36.4
+  },
+  "participant_rows_per_aco": {
+   "p0": 1.0,
+   "p10": 2.0,
+   "p25": 6.0,
+   "p50": 17.0,
+   "p75": 36.0,
+   "p90": 71.0,
+   "p100": 823.0,
+   "n": 511,
+   "mean": 30.1
+  },
+  "pc_flex_participant_rows": 572
+ },
+ "field_notes": {
+  "N_AB": "Number of assigned beneficiaries, performance year (headcount).",
+  "N_AB_Year_PY": "Assigned beneficiary person-years (headcount pro-rated for partial-year eligibility). This is the denominator CMS uses for per-capita figures.",
+  "UpdatedBnchmk": "PER CAPITA updated benchmark ($ per person-year), risk-adjusted and trended. NOT a total.",
+  "HistBnchmk": "PER CAPITA historical benchmark ($ per person-year).",
+  "ABtotBnchmk": "Total benchmark expenditures = UpdatedBnchmk x N_AB_Year.",
+  "ABtotExp": "Total PY expenditures = Per_Capita_Exp_TOTAL_PY x N_AB_Year.",
+  "Sav_rate": "(ABtotBnchmk - ABtotExp) / ABtotBnchmk as a percent. GROSS savings rate, before MSR/MLR and before the sharing rate.",
+  "GenSaveLoss": "Gross savings/losses in dollars, zeroed out when the ACO did not cross its MSR/MLR. Does NOT reflect the final sharing rate.",
+  "EarnSaveLoss": "Dollars actually earned (positive) or owed (negative) after sharing rate, quality, and caps.",
+  "QualScore": "MIPS quality performance category score after Population/Income Adjustment bonus points, the Quality EUC policy, and the Excluded/No-Benchmark APP Measures scoring policy.",
+  "Current_Track": "A/B = BASIC one-sided; C/D/E = BASIC two-sided; EN = ENHANCED (two-sided).",
+  "Rev_Exp_Cat": "High Revenue if ACO participants' total Medicare Parts A+B FFS revenue is >= 35% of total Parts A+B FFS expenditures for the ACO's assigned beneficiaries; else Low Revenue.",
+  "CapAnn_PB": "Annualized, truncated, weighted mean expenditures per assigned beneficiary person-year for Part B physician/supplier (Carrier) services, claim types 71 and 72.",
+  "Par_LBN": "Legal Business Name of an ACO participant. ACO participants are identified by TIN in the program, but the PUBLIC file publishes only the LBN, not the TIN."
+ },
+ "sharing_rates": {
+  "final_share_rate_counts_among_met_qps": {
+   "75.00": 200,
+   "40.00": 127,
+   "50.00": 107,
+   "20.00": 12,
+   "25.00": 1
+  },
+  "max_track_rate_pct": {
+   "BASIC_A": 40,
+   "BASIC_B": 40,
+   "BASIC_C": 50,
+   "BASIC_D": 50,
+   "BASIC_E": 50,
+   "ENHANCED": 75
+  },
+  "alt_qps_formula": "FinalShareRate = (QualScore/100) x max track rate; verified for 29/29 alt-QPS ACOs to within 0.02 pp",
+  "reduced_sharing_ReducedSS_eq_1": {
+   "n": 13,
+   "detail": "12 BASIC A with AIP=1 at 20.00%, 1 BASIC E at 25.00%; reduced sharing rate for low-revenue ACOs",
+   "pct_of_acos": 2.7
+  }
+ }
+}

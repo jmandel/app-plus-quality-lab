@@ -253,6 +253,7 @@ interface FinInputs {
   grossPct: number;
   benchmarkM: number;
   partB: number;
+  clinOn?: boolean;
 }
 interface Settlement {
   sharePct: number;
@@ -273,7 +274,7 @@ function settle(mach: Machine, fin: FinInputs): Settlement {
   const losses$ = gross < 0 ? (lossPct / 100) * gross : 0;
   const clin = 0.5 * mach.q + 0.3 * 82 + 0.2 * 100;
   const adjPct = clin >= 75 ? ((clin - 75) / 25) * 2.0 : -(9 * (75 - clin)) / 75;
-  const net$ = savings$ + losses$ + (adjPct / 100) * fin.partB;
+  const net$ = savings$ + losses$ + (fin.clinOn === false ? 0 : (adjPct / 100) * fin.partB);
   return { sharePct, lossPct, gross, savings$, losses$, clin, adjPct, net$ };
 }
 
@@ -561,6 +562,7 @@ export default function AppPlusPathwayLab() {
   const [partB, setPartB] = useState(s0.partB);
   const [tins, setTins] = useState(s0.tins);
   const [skew, setSkew] = useState(s0.skew);
+  const [clinOn, setClinOn] = useState(false);
 
   const scen = SCENARIOS[scenario];
   const load = (key: ScenarioKey) => {
@@ -573,14 +575,14 @@ export default function AppPlusPathwayLab() {
   const allSame = PATHWAYS.find((k) => MEASURES.every((m) => routing[m.id] === k));
 
   const mach = useMemo(() => runMachine(routing, rates, gates, capture, scen.fixedPts, proposedFlat), [routing, rates, gates, capture, scen, proposedFlat]);
-  const fin = useMemo(() => settle(mach, { grossPct, benchmarkM, partB }), [mach, grossPct, benchmarkM, partB]);
+  const fin = useMemo(() => settle(mach, { grossPct, benchmarkM, partB, clinOn }), [mach, grossPct, benchmarkM, partB, clinOn]);
   const marginal = useMemo(() => {
     const plus = { ...mach, total: Math.min(mach.total + 1, AVAILABLE), q: (Math.min(mach.total + 1, AVAILABLE) / AVAILABLE) * 100 };
     plus.status = plus.deemed ? "DEEMED" : plus.q >= QPS ? "MET" : plus.outcomeOK ? "ALT" : "FAILED";
-    const base$ = settle(mach, { grossPct, benchmarkM, partB }).net$;
-    const plus$ = settle(plus, { grossPct, benchmarkM, partB }).net$;
+    const base$ = settle(mach, { grossPct, benchmarkM, partB, clinOn }).net$;
+    const plus$ = settle(plus, { grossPct, benchmarkM, partB, clinOn }).net$;
     return (plus$ - base$) * 1000;
-  }, [mach, grossPct, benchmarkM, partB]);
+  }, [mach, grossPct, benchmarkM, partB, clinOn]);
 
   // Comparison rows: four uniform strategies, the current configuration, and the exact best
   // mixed assignment. Among eCQM/MIPS CQM only, per-measure greedy is provably optimal
@@ -589,7 +591,7 @@ export default function AppPlusPathwayLab() {
   // automatic-pass AND-condition, so we simply check all 4^5 = 1,024 assignments exactly.
   const comparison = useMemo(() => {
     const ALLPASS: Gates = { "001": true, "134": true, "236": true, "112": true, "113": true };
-    const finP = { grossPct, benchmarkM, partB };
+    const finP = { grossPct, benchmarkM, partB, clinOn };
     const evalR = (r: Routing, g: Gates) => { const m = runMachine(r, rates, g, capture, scen.fixedPts, proposedFlat); return { m, f: settle(m, finP) }; };
     const rows: ComparisonRow[] = PATHWAYS.map((k) => ({
       key: k, label: `All ${CT[k].label}${CT[k].proposed ? "*" : ""}`, labelColor: CT[k].color,
@@ -605,7 +607,7 @@ export default function AppPlusPathwayLab() {
     rows.push({ key: "cfg", label: "As configured above", labelColor: T.ink, showMethods: true, ...evalR(routing, gates) });
     rows.push({ key: "best", label: "Best mix (all 1,024 checked)", labelColor: T.money, showMethods: true, ...best! });
     return rows;
-  }, [rates, capture, grossPct, benchmarkM, partB, scen, proposedFlat, routing, gates]);
+  }, [rates, capture, grossPct, benchmarkM, partB, clinOn, scen, proposedFlat, routing, gates]);
 
   // Routing behind the "Best mix" row, reconstructed from its per-measure results,
   // so Step 2 can offer a one-click apply.
@@ -775,9 +777,16 @@ export default function AppPlusPathwayLab() {
                     <b style={{ width: 56, color: T.ink, whiteSpace: "nowrap", textAlign: "right" }}>{s.fmt(s.val)}</b>
                   </label>
                 ))}
+                <label style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 10.5, color: T.inkSoft, margin: "2px 0 4px", cursor: "pointer" }}>
+                  <input type="checkbox" checked={clinOn} onChange={(e) => setClinOn(e.target.checked)} />
+                  optional extension: include the clinician fee-adjustment channel in dollar totals (off by default — see model scope, bottom of page)
+                </label>
                 <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "3px 0 0", lineHeight: 1.45 }}>
-                  Cost benchmark sizes the savings/loss pool; Part B billing is what the clinician fee adjustment
-                  applies to; the practice-group count and size mix shape the fan-out shown below (mix: equal-sized groups → one dominant group with a long tail). Track note: in Advanced-APM tracks (BASIC Level E, ENHANCED) most clinicians are Qualified APM Participants and exempt from MIPS, so the non-QP base is small; in BASIC A–D every clinician is MIPS-subject. (QP status is also becoming more granular — individual-level determinations began in 2026, and TIN/NPI-level determination is proposed for 2027 — so treat the non-QP base as a spectrum, not all-or-nothing.) Selecting a scenario in
+                  Cost benchmark sizes the savings/loss pool. "Non-QP Part B" means, specifically: Medicare
+                  professional billing at the ACO's participant practice groups by clinicians who are NOT Qualified
+                  APM Participants — the population whose MIPS score IS the ACO's quality score. Billing those same
+                  clinicians run through outside, non-ACO groups is scored on that group's own MIPS performance and
+                  is out of scope here; the practice-group count and size mix shape the fan-out shown below (mix: equal-sized groups → one dominant group with a long tail). Track note: in Advanced-APM tracks (BASIC Level E, ENHANCED) most clinicians are Qualified APM Participants and exempt from MIPS, so the non-QP base is small; in BASIC A–D every clinician is MIPS-subject. (QP status is also becoming more granular — individual-level determinations began in 2026, and TIN/NPI-level determination is proposed for 2027 — so treat the non-QP base as a spectrum, not all-or-nothing.) Selecting a scenario in
                   Step 1 resets these to that ACO's profile.
                 </p>
               </div>
@@ -875,7 +884,11 @@ export default function AppPlusPathwayLab() {
 
           {/* pathway comparison */}
           <Panel title="Where the score lands — every practice group in the ACO" tag={`${tins} TINs · one shared fate`} style={{ marginBottom: 12 }}>
-            <TinRoster n={tins} adjPct={fin.adjPct} partB={partB} skew={skew} />
+            {clinOn ? <TinRoster n={tins} adjPct={fin.adjPct} partB={partB} skew={skew} /> : (
+              <p style={{ fontSize: 11, color: T.inkFaint, ...mono, margin: 0 }}>
+                OUT OF DEFAULT SCOPE — clinician fee adjustments involve per-clinician QP status and per-practice billing arrangements this model can't parameterize from public data. The rate is still computed ({fin.adjPct >= 0 ? "+" : ""}{fin.adjPct.toFixed(1)}%); enable the optional extension in Step 3 to include it in totals.
+              </p>
+            )}
             <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "8px 0 0", lineHeight: 1.5 }}>
               An ACO reports quality once, as one entity — but the clinician fee adjustment computed from that score
               applies to every participating practice group (identified by Tax ID Number, "TIN") on its Medicare
@@ -936,7 +949,17 @@ export default function AppPlusPathwayLab() {
             </p>
           </Panel>
 
-          <p style={{ fontSize: 11, color: T.inkFaint, marginTop: 16, maxWidth: 920, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 11, color: T.inkSoft, marginTop: 16, maxWidth: 920, lineHeight: 1.5 }}>
+            <b>Model scope.</b> In scope: how the five reported measures are scored under each collection type
+            against real 2026 benchmarks; the quality performance standard (met by score or by the reporting
+            incentive); the shared-savings rate; and quality-scaled shared losses. That is a complete model of the
+            ACO-level settlement — including why the score keeps mattering after the standard is met in a loss year,
+            and why, in a savings year above the threshold, one more point is honestly worth $0. Out of default
+            scope: clinician-level MIPS fee adjustments (available as a labeled optional extension — the mechanism
+            is real but its boundaries depend on per-clinician QP status and billing arrangements with no public
+            data source), fractional within-decile scoring, score uncertainty, and CAHPS/claims-measure variation.
+          </p>
+          <p style={{ fontSize: 11, color: T.inkFaint, marginTop: 10, maxWidth: 920, lineHeight: 1.5 }}>
             Sources and limitations: benchmark tables are CMS's actual published 2026 quality benchmarks. Where CMS
             published no 2026 benchmark (measures 112 and 113 under eCQM/MIPS CQM — insufficient 2024 data), the real
             scoring will use a benchmark computed after everyone submits; 2025 tables are shown as estimates and marked

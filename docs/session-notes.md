@@ -121,6 +121,18 @@ React harness.
 - PY2026 is the final year for MIPS CQMs unless the proposed extension
   finalizes.
 
+## Model scope
+
+The default model is the ACO-level settlement, complete in itself: measure
+scoring against real 2026 benchmarks per collection type, the quality
+performance standard (by score or reporting incentive), sharing rate, and
+quality-scaled shared losses. Above the passing threshold in a savings year
+the marginal value of a point is $0 by design — that is the honest shape of
+the incentive, with downside (loss-year) scaling supplying the continuing
+value of points. The clinician MIPS fee-adjustment channel is an optional,
+off-by-default extension: the mechanism is real, but its boundary depends on
+per-clinician QP status and billing arrangements with no public data source.
+
 ## Known simplifications (labeled in-app as well)
 
 - Whole-decile scoring (real MIPS awards fractional points 1.0–10.9 within a

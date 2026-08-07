@@ -1,0 +1,221 @@
+{
+ "_note": "Extract for research/pfs-cy2027-proposed.md. Retrieved 2026-08-07.",
+ "sources": {
+  "py2025_qpp_quality_benchmarks_csv": "https://qpp.cms.gov/api/frontend/benchmarks-csv/quality/2025",
+  "py2026_qpp_quality_benchmarks_csv": "https://qpp.cms.gov/api/frontend/benchmarks-csv/quality/2026",
+  "py2027_qpp_quality_benchmarks_csv": "https://qpp.cms.gov/api/frontend/benchmarks-csv/quality/2027 (HTTP 500 on 2026-08-07 - not yet published)"
+ },
+ "flat_benchmark_deciles": {
+  "_source": "CMS-1848-P Tables B-G3 (non-inverse) and B-G4 (inverse), 91 FR 44043-44044; identical to published PY2025 Medicare CQM flat benchmarks in the QPP PY2025 benchmark file",
+  "non_inverse": {
+   "1": "1.00 - 9.99",
+   "2": "10.00 - 19.99",
+   "3": "20.00 - 29.99",
+   "4": "30.00 - 39.99",
+   "5": "40.00 - 49.99",
+   "6": "50.00 - 59.99",
+   "7": "60.00 - 69.99",
+   "8": "70.00 - 79.99",
+   "9": "80.00 - 89.99",
+   "10": ">= 90.00"
+  },
+  "inverse": {
+   "1": "99.00 - 90.01",
+   "2": "90.00 - 80.01",
+   "3": "80.00 - 70.01",
+   "4": "70.00 - 60.01",
+   "5": "60.00 - 50.01",
+   "6": "50.00 - 40.01",
+   "7": "40.00 - 30.01",
+   "8": "30.00 - 20.01",
+   "9": "20.00 - 10.01",
+   "10": "<= 10.00"
+  }
+ },
+ "medicare_cqm_benchmarks_as_published": {
+  "2025": [
+   {
+    "measure_id": "001",
+    "title": "Diabetes: Glycemic Status Assessment Greater Than 9%",
+    "inverse": "Yes",
+    "benchmark_type_label_in_file": "Historical",
+    "is_flat_decile_structure": true,
+    "average_performance_rate": "--",
+    "deciles": {
+     "1": "99.00 - 90.01",
+     "2": "90.00 - 80.01",
+     "3": "80.00 - 70.01",
+     "4": "70.00 - 60.01",
+     "5": "60.00 - 50.01",
+     "6": "50.00 - 40.01",
+     "7": "40.00 - 30.01",
+     "8": "30.00 - 20.01",
+     "9": "20.00 - 10.01",
+     "10": "<= 10.00"
+    }
+   },
+   {
+    "measure_id": "112",
+    "title": "Breast Cancer Screening",
+    "inverse": "No",
+    "benchmark_type_label_in_file": "Historical",
+    "is_flat_decile_structure": true,
+    "average_performance_rate": "--",
+    "deciles": {
+     "1": "1.00 - 9.99",
+     "2": "10.00 - 19.99",
+     "3": "20.00 - 29.99",
+     "4": "30.00 - 39.99",
+     "5": "40.00 - 49.99",
+     "6": "50.00 - 59.99",
+     "7": "60.00 - 69.99",
+     "8": "70.00 - 79.99",
+     "9": "80.00 - 89.99",
+     "10": ">= 90.00"
+    }
+   },
+   {
+    "measure_id": "134",
+    "title": "Preventive Care and Screening: Screening for Depression and Follow-Up Plan",
+    "inverse": "No",
+    "benchmark_type_label_in_file": "Historical",
+    "is_flat_decile_structure": true,
+    "average_performance_rate": "--",
+    "deciles": {
+     "1": "1.00 - 9.99",
+     "2": "10.00 - 19.99",
+     "3": "20.00 - 29.99",
+     "4": "30.00 - 39.99",
+     "5": "40.00 - 49.99",
+     "6": "50.00 - 59.99",
+     "7": "60.00 - 69.99",
+     "8": "70.00 - 79.99",
+     "9": "80.00 - 89.99",
+     "10": ">= 90.00"
+    }
+   },
+   {
+    "measure_id": "236",
+    "title": "Controlling High Blood Pressure",
+    "inverse": "No",
+    "benchmark_type_label_in_file": "Historical",
+    "is_flat_decile_structure": true,
+    "average_performance_rate": "--",
+    "deciles": {
+     "1": "1.00 - 9.99",
+     "2": "10.00 - 19.99",
+     "3": "20.00 - 29.99",
+     "4": "30.00 - 39.99",
+     "5": "40.00 - 49.99",
+     "6": "50.00 - 59.99",
+     "7": "60.00 - 69.99",
+     "8": "70.00 - 79.99",
+     "9": "80.00 - 89.99",
+     "10": ">= 90.00"
+    }
+   }
+  ],
+  "2026": [
+   {
+    "measure_id": "001",
+    "title": "Diabetes: Glycemic Status Assessment Greater Than 9%",
+    "inverse": "Yes",
+    "benchmark_type_label_in_file": "Historical",
+    "is_flat_decile_structure": false,
+    "average_performance_rate": "25.78",
+    "deciles": {
+     "1": "80.94 - 49.20",
+     "2": "49.19 - 38.29",
+     "3": "38.28 - 29.77",
+     "4": "29.76 - 25.94",
+     "5": "25.93 - 22.28",
+     "6": "22.27 - 18.94",
+     "7": "18.93 - 14.34",
+     "8": "14.33 - 10.15",
+     "9": "10.14 - 7.04",
+     "10": "<= 7.03"
+    }
+   },
+   {
+    "measure_id": "112",
+    "title": "Breast Cancer Screening",
+    "inverse": "No",
+    "benchmark_type_label_in_file": "Historical",
+    "is_flat_decile_structure": true,
+    "average_performance_rate": "--",
+    "deciles": {
+     "1": "1.00 - 9.99",
+     "2": "10.00 - 19.99",
+     "3": "20.00 - 29.99",
+     "4": "30.00 - 39.99",
+     "5": "40.00 - 49.99",
+     "6": "50.00 - 59.99",
+     "7": "60.00 - 69.99",
+     "8": "70.00 - 79.99",
+     "9": "80.00 - 89.99",
+     "10": ">= 90.00"
+    }
+   },
+   {
+    "measure_id": "113",
+    "title": "Colorectal Cancer Screening",
+    "inverse": "No",
+    "benchmark_type_label_in_file": "Historical",
+    "is_flat_decile_structure": true,
+    "average_performance_rate": "--",
+    "deciles": {
+     "1": "1.00 - 9.99",
+     "2": "10.00 - 19.99",
+     "3": "20.00 - 29.99",
+     "4": "30.00 - 39.99",
+     "5": "40.00 - 49.99",
+     "6": "50.00 - 59.99",
+     "7": "60.00 - 69.99",
+     "8": "70.00 - 79.99",
+     "9": "80.00 - 89.99",
+     "10": ">= 90.00"
+    }
+   },
+   {
+    "measure_id": "134",
+    "title": "Preventive Care and Screening: Screening for Depression and Follow-Up Plan",
+    "inverse": "No",
+    "benchmark_type_label_in_file": "Historical",
+    "is_flat_decile_structure": false,
+    "average_performance_rate": "62.87",
+    "deciles": {
+     "1": "11.44 - 32.50",
+     "2": "32.51 - 45.66",
+     "3": "45.67 - 54.48",
+     "4": "54.49 - 59.26",
+     "5": "59.27 - 65.55",
+     "6": "65.56 - 70.54",
+     "7": "70.55 - 76.10",
+     "8": "76.11 - 82.16",
+     "9": "82.17 - 92.33",
+     "10": ">= 92.34"
+    }
+   },
+   {
+    "measure_id": "236",
+    "title": "Controlling High Blood Pressure",
+    "inverse": "No",
+    "benchmark_type_label_in_file": "Historical",
+    "is_flat_decile_structure": false,
+    "average_performance_rate": "67.87",
+    "deciles": {
+     "1": "13.68 - 44.86",
+     "2": "44.87 - 62.32",
+     "3": "62.33 - 68.16",
+     "4": "68.17 - 70.14",
+     "5": "70.15 - 72.53",
+     "6": "72.54 - 74.08",
+     "7": "74.09 - 74.69",
+     "8": "74.70 - 76.41",
+     "9": "76.42 - 82.80",
+     "10": ">= 82.81"
+    }
+   }
+  ]
+ }
+}
