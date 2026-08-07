@@ -216,6 +216,7 @@ interface Machine {
   allFull: boolean;
   allGates: boolean;
   outcomeOK: boolean;
+  otherOK: boolean;
   deemed: boolean;
   status: Status;
 }
@@ -237,9 +238,15 @@ function runMachine(routing: Routing, rates: Rates, gates: Gates, capture: numbe
   const allFull = rows.every((r) => CT[r.pathway].fullPop);
   const allGates = rows.every((r) => gates[r.id]);
   const outcomeOK = rows.some((r) => r.outcome && gates[r.id] && r.decile >= 2);
-  const deemed = allFull && allGates && outcomeOK;
+  // Second incentive condition (CY2025 final rule): at least one measure OTHER than the
+  // qualifying outcome measure must reach the 40th percentile (decile 5+). The claims
+  // outcome measures can also satisfy the outcome condition in the real rule; this model
+  // checks 001/236 only (conservative).
+  const otherOK = rows.some((r) => !(r.outcome && r.decile >= 2) && r.decile >= 5 && r.pts > 0)
+    || rows.filter((r) => r.outcome && r.decile >= 2).length >= 2 && rows.some((r) => r.decile >= 5 && r.pts > 0);
+  const deemed = allFull && allGates && outcomeOK && otherOK;
   const status = deemed ? "DEEMED" : q >= QPS ? "MET" : outcomeOK ? "ALT" : "FAILED";
-  return { rows, earned, coa, fixed, total, q, allFull, allGates, outcomeOK, deemed, status };
+  return { rows, earned, coa, fixed, total, q, allFull, allGates, outcomeOK, otherOK, deemed, status };
 }
 
 interface FinInputs {
@@ -770,7 +777,7 @@ export default function AppPlusPathwayLab() {
                 ))}
                 <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "3px 0 0", lineHeight: 1.45 }}>
                   Cost benchmark sizes the savings/loss pool; Part B billing is what the clinician fee adjustment
-                  applies to; the practice-group count and size mix shape the fan-out shown below (mix: equal-sized groups → one dominant group with a long tail). Track note: in Advanced-APM tracks (BASIC Level E, ENHANCED) most clinicians are Qualified APM Participants and exempt from MIPS, so the non-QP base is small; in BASIC A–D every clinician is MIPS-subject. Selecting a scenario in
+                  applies to; the practice-group count and size mix shape the fan-out shown below (mix: equal-sized groups → one dominant group with a long tail). Track note: in Advanced-APM tracks (BASIC Level E, ENHANCED) most clinicians are Qualified APM Participants and exempt from MIPS, so the non-QP base is small; in BASIC A–D every clinician is MIPS-subject. (QP status is also becoming more granular — individual-level determinations began in 2026, and TIN/NPI-level determination is proposed for 2027 — so treat the non-QP base as a spectrum, not all-or-nothing.) Selecting a scenario in
                   Step 1 resets these to that ACO's profile.
                 </p>
               </div>
@@ -843,6 +850,7 @@ export default function AppPlusPathwayLab() {
                 <StatusLamp on={mach.allFull} label="All five measures reported via an all-patient method (eCQM or MIPS CQM)" />
                 <StatusLamp on={mach.allGates} label="Every measure met the minimum reporting requirements" />
                 <StatusLamp on={mach.outcomeOK} label="At least one outcome measure (001 or 236) beat the bottom 10%" />
+                <StatusLamp on={mach.otherOK} label="At least one other measure reached the 40th percentile (decile 5+)" />
               </div>
               <ThresholdStrip value={mach.q} threshold={QPS} flagLabel="40th pctile (illus. 55)" dimmed={mach.deemed} />
               <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>

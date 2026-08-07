@@ -101,8 +101,10 @@ React harness.
   the proposed rule (2027+, not final).
 - **Reporting incentive ("deeming")**: ALL five measures via eCQM/MIPS CQM in
   any mix, each meeting 75% data completeness, plus ≥10th percentile on one
-  outcome measure (001 or 236) → deemed to meet the quality performance
-  standard. All-or-nothing: one Medicare-column measure forfeits it. It is a
+  outcome measure AND ≥40th percentile on at least one other measure → deemed
+  to meet the quality performance standard. (The real rule counts the two
+  claims outcome measures toward the outcome condition; the lab checks 001/236
+  only, a conservative simplification.) All-or-nothing: one Medicare-column measure forfeits it. It is a
   floor-raiser, never a ceiling-raiser — same maximum sharing rate as passing
   by score.
 - **COA**: finalized (CY2025 rule, from PY2025), eCQM-only, per-measure +1,
