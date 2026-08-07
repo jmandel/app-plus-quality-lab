@@ -119,7 +119,10 @@ const MEASURES: Measure[] = [
   { id: "112", name: "Breast cancer screening", outcome: false },
   { id: "113", name: "Colorectal cancer screening", outcome: false },
 ];
-const AVAILABLE = 80, QPS = 55, POP_ADJ = 3;
+// QPS = CMS's published PY2026 40th-percentile quality performance standard (QPS memo:
+// (77.73 + 74.54 + 69.27) / 3 = 73.85). The lab awards whole-decile points (no fractional
+// 1.0–10.9), so its scores read a few points below CMS's scale — near-bar results are borderline.
+const AVAILABLE = 80, QPS = 73.85, POP_ADJ = 3;
 
 type TrackKey = "enhanced" | "basicA" | "basicB" | "basicCDE";
 // Sharing caps and loss rails per 42 CFR 425.605(d) (BASIC) and 425.610(d), (f)(4) (ENHANCED):
@@ -274,6 +277,45 @@ function runMachine(routing: Routing, rates: Rates, gates: Gates, capture: numbe
   return { rows, earned, coa, fixed, total, q, available, allFull, allGates, outcomeOK, otherOK, deemed, status };
 }
 
+/* ---- Real-context pins for the input sliders. Care-rate pins are measured-rate percentiles
+   of real reporters, read off the benchmark ladders themselves (001/134/236: CMS's 2026
+   Medicare CQM benchmarks, built from actual PY2024 ACO submissions; 112/113: the PY2025
+   MIPS CQM file, since their Medicare CQM benchmarks are flat policy, not data — their p90
+   of 100 is clamped to the slider max of 95). Dollar and savings pins are PY2024 MSSP PUF
+   percentiles (research/data/mssp-py2024-distributions.json). For 001 (inverse) percentiles
+   are of PERFORMANCE, so the care-rate values descend. ---- */
+interface Pin { p: string; v: number }
+const RATE_PINS: Record<MeasureId, Pin[]> = {
+  "001": [{ p: "p10", v: 49 }, { p: "p30", v: 30 }, { p: "p50", v: 22 }, { p: "p70", v: 14 }, { p: "p90", v: 7 }],
+  "134": [{ p: "p10", v: 33 }, { p: "p30", v: 54 }, { p: "p50", v: 66 }, { p: "p70", v: 76 }, { p: "p90", v: 92 }],
+  "236": [{ p: "p10", v: 45 }, { p: "p30", v: 68 }, { p: "p50", v: 73 }, { p: "p70", v: 75 }, { p: "p90", v: 83 }],
+  "112": [{ p: "p10", v: 30 }, { p: "p30", v: 58 }, { p: "p50", v: 76 }, { p: "p70", v: 88 }, { p: "p90", v: 95 }],
+  "113": [{ p: "p10", v: 26 }, { p: "p30", v: 65 }, { p: "p50", v: 79 }, { p: "p70", v: 89 }, { p: "p90", v: 95 }],
+};
+const BENCH_PINS: Pin[] = [{ p: "p10", v: 76 }, { p: "p25", v: 106 }, { p: "p50", v: 177 }, { p: "p75", v: 331 }, { p: "p90", v: 604 }];
+const GROSS_PINS: Pin[] = [{ p: "p10", v: -0.4 }, { p: "p25", v: 2.0 }, { p: "p50", v: 4.2 }, { p: "p75", v: 7.0 }, { p: "p90", v: 10.4 }];
+const CAPTURE_PINS: Pin[] = [{ p: "low", v: 75 }, { p: "default", v: 85 }, { p: "top-rung", v: 93 }, { p: "perfect", v: 100 }];
+
+function PinRow({ pins, cur, onPick, fmt, color = T.ink }: { pins: Pin[]; cur: number; onPick: (v: number) => void; fmt: (v: number) => string; color?: string }) {
+  return (
+    <span style={{ display: "inline-flex", gap: 3, flexWrap: "wrap" }}>
+      {pins.map((pin) => {
+        const on = Math.abs(cur - pin.v) < 0.75;
+        return (
+          <button key={pin.p} onClick={() => onPick(pin.v)} title={`jump to ${pin.p}: ${fmt(pin.v)}`}
+            style={{
+              border: `1px solid ${on ? color : T.line}`, background: on ? color : "#fff",
+              color: on ? "#fff" : T.inkSoft, borderRadius: 2, padding: "0 4px",
+              fontSize: 8.5, ...mono, cursor: "pointer", lineHeight: "13px", whiteSpace: "nowrap",
+            }}>
+            {pin.p} {fmt(pin.v)}
+          </button>
+        );
+      })}
+    </span>
+  );
+}
+
 interface FinInputs {
   grossPct: number;
   benchmarkM: number;
@@ -364,19 +406,19 @@ function Panel({ children, title, tag, style }: { children?: React.ReactNode; ti
     </div>
   );
 }
-function ThresholdStrip({ value, threshold, flagLabel, markerColor = T.ink, dimmed = false, height = 50 }: { value: number; threshold: number; flagLabel: string; markerColor?: string; dimmed?: boolean; height?: number }) {
-  const w = 260, h = height;
+function ThresholdStrip({ value, threshold, flagLabel, markerColor = T.ink, dimmed = false, height = 62 }: { value: number; threshold: number; flagLabel: string; markerColor?: string; dimmed?: boolean; height?: number }) {
+  const w = 260, h = height, ph = h - 13;
   const x = (v: number) => 8 + (Math.max(0, Math.min(100, v)) / 100) * (w - 16);
   return (
     <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", maxWidth: 330, height: "auto", display: "block" }}>
-      <path d={`M8 ${h - 12} C ${w * 0.25} ${h - 13}, ${w * 0.32} 8, ${w * 0.5} 10 S ${w * 0.75} ${h - 16}, ${w - 8} ${h - 12} Z`}
+      <path d={`M8 ${ph} C ${w * 0.25} ${ph - 1}, ${w * 0.32} 8, ${w * 0.5} 10 S ${w * 0.75} ${ph - 4}, ${w - 8} ${ph} Z`}
         fill={dimmed ? "#EDF0F2" : "#E3EAEF"} stroke={dimmed ? T.grayed : T.line} strokeWidth="1" />
-      <line x1={8} y1={h - 12} x2={w - 8} y2={h - 12} stroke={dimmed ? T.grayed : T.ink} strokeWidth="1.2" />
-      <line x1={x(threshold)} y1={4} x2={x(threshold)} y2={h - 12} stroke={dimmed ? T.grayed : T.fail} strokeWidth="1.6" strokeDasharray="4 3" />
+      <line x1={8} y1={ph} x2={w - 8} y2={ph} stroke={dimmed ? T.grayed : T.ink} strokeWidth="1.2" />
+      <line x1={x(threshold)} y1={4} x2={x(threshold)} y2={ph} stroke={dimmed ? T.grayed : T.fail} strokeWidth="1.6" strokeDasharray="4 3" />
       <path d={`M ${x(threshold)} 4 l 12 4 l -12 4 Z`} fill={dimmed ? T.grayed : T.fail} />
-      <text x={Math.min(x(threshold) + 15, w - 82)} y={11} fontSize="8.5" fontFamily="IBM Plex Mono, monospace" fill={dimmed ? T.grayed : T.inkSoft}>{flagLabel}</text>
-      <path d={`M ${x(value)} ${h - 11} l -5 8 h 10 Z`} fill={dimmed ? T.grayed : markerColor} />
-      <text x={x(value)} y={h - 0.5} fontSize="8.5" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fill={dimmed ? T.grayed : markerColor}>{value.toFixed(0)}</text>
+      <text x={x(threshold) - 6} y={11} fontSize="8.5" textAnchor="end" fontFamily="IBM Plex Mono, monospace" fill={dimmed ? T.grayed : T.inkSoft}>{flagLabel}</text>
+      <path d={`M ${x(value)} ${ph + 1} l -5 7 h 10 Z`} fill={dimmed ? T.grayed : markerColor} />
+      <text x={Math.max(38, Math.min(w - 38, x(value)))} y={h - 1} fontSize="9" fontWeight="700" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fill={dimmed ? T.grayed : markerColor}>score {value.toFixed(1)}</text>
     </svg>
   );
 }
@@ -734,18 +776,36 @@ export default function AppPlusPathwayLab() {
           <Panel title="Step 3 · Adjust the inputs (every assumption is shown)" style={{ marginBottom: 12 }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 14 }}>
               <div>
-                <div style={{ fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 6, minHeight: 16 }}>UNDERLYING CARE RATES (%)</div>
+                <div style={{ fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 6, minHeight: 16 }}>UNDERLYING CARE RATES (%) — chips jump to real percentiles</div>
                 {MEASURES.map((m) => (
-                  <label key={m.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 3 }}>
-                    <span style={{ width: 26 }}>{m.id}</span>
-                    <input type="range" min={5} max={95} value={rates[m.id]} onChange={(e) => setRates({ ...rates, [m.id]: +e.target.value })} style={{ flex: 1, accentColor: T.ink }} aria-label={`underlying rate ${m.id}`} />
-                    <b style={{ width: 30, color: T.ink }}>{rates[m.id]}%</b>
-                  </label>
+                  <div key={m.id} style={{ marginBottom: 6 }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 1 }}>
+                      <span style={{ width: 26 }}>{m.id}</span>
+                      <input type="range" min={5} max={95} value={rates[m.id]} onChange={(e) => setRates({ ...rates, [m.id]: +e.target.value })} style={{ flex: 1, accentColor: T.ink }} aria-label={`underlying rate ${m.id}`} />
+                      <b style={{ width: 30, color: T.ink }}>{rates[m.id]}%</b>
+                    </label>
+                    <div style={{ margin: "0 0 0 32px" }}>
+                      <PinRow pins={RATE_PINS[m.id]} cur={rates[m.id]} onPick={(v) => setRates({ ...rates, [m.id]: v })} fmt={(v) => `${v}`} />
+                    </div>
+                  </div>
                 ))}
+                <p style={{ fontSize: 9.5, color: T.inkFaint, margin: "4px 0 0", lineHeight: 1.4 }}>
+                  Pins = measured-rate percentiles of real reporters, read off the benchmark ladders (001/134/236:
+                  CMS's 2026 Medicare CQM tables built from actual ACO submissions; 112/113: the 2025 MIPS CQM file —
+                  their Medicare CQM benchmarks are policy-set flat bands, not data). For 001, percentiles are of
+                  performance, so lower is better.
+                </p>
               </div>
               <div>
                 <div style={{ fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 6, minHeight: 16 }}>eCQM DATA-CAPTURE EFFICIENCY: <b style={{ color: CT.ecqm.color }}>{(capture * 100).toFixed(0)}%</b></div>
                 <input type="range" min={0.65} max={1} step={0.01} value={capture} onChange={(e) => setCapture(+e.target.value)} style={{ width: "100%", accentColor: CT.ecqm.color }} aria-label="capture efficiency" />
+                <div style={{ margin: "2px 0 0" }}>
+                  <PinRow pins={CAPTURE_PINS} cur={capture * 100} onPick={(v) => setCapture(v / 100)} fmt={(v) => `${v}%`} color={CT.ecqm.color} />
+                </div>
+                <p style={{ fontSize: 9.5, color: T.inkFaint, margin: "3px 0 0", lineHeight: 1.4 }}>
+                  Pins are labeled assumptions (no public per-ACO source); "top-rung" ≈ the capture needed for the
+                  best deciles of the eCQM ladders at strong care rates.
+                </p>
                 <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "3px 0 0", lineHeight: 1.45 }}>
                   Electronic (eCQM) reporting can only count care that was recorded as structured data in the EHR.
                   The slider sets what share of care that actually happened is captured that way, so electronic
@@ -766,14 +826,20 @@ export default function AppPlusPathwayLab() {
                     <b style={{ width: 56, color: T.ink, whiteSpace: "nowrap", textAlign: "right" }}>{s.fmt(s.val)}</b>
                   </label>
                 ))}
+                <div style={{ margin: "0 0 3px" }}>
+                  <PinRow pins={BENCH_PINS} cur={benchmarkM} onPick={setBenchmarkM} fmt={(v) => `$${v}M`} />
+                </div>
                 <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "3px 0 0", lineHeight: 1.45 }}>
-                  Cost benchmark sizes the savings/loss pool. Selecting a scenario in
-                  Step 1 resets these to that ACO's profile.
+                  Cost benchmark sizes the savings/loss pool; pins are updated-benchmark percentiles of the real 476
+                  PY2024 ACOs. Selecting a scenario in Step 1 resets these to that ACO's profile.
                 </p>
               </div>
               <div>
                 <div style={{ fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 6, minHeight: 16 }}>SPENDING VS COST BENCHMARK: <b style={{ color: grossPct >= 0 ? T.money : T.debt }}>{grossPct >= 0 ? "+" : ""}{grossPct.toFixed(1)}%</b></div>
                 <input type="range" min={-3} max={12} step={0.1} value={grossPct} onChange={(e) => setGrossPct(+e.target.value)} style={{ width: "100%", accentColor: grossPct >= 0 ? T.money : T.debt }} aria-label="gross result" />
+                <div style={{ margin: "2px 0 4px" }}>
+                  <PinRow pins={GROSS_PINS} cur={grossPct} onPick={setGrossPct} fmt={(v) => `${v >= 0 ? "+" : ""}${v}%`} color={T.money} />
+                </div>
                 <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "3px 0 0", lineHeight: 1.45 }}>
                   Methods that report only Medicare patients are assumed to score {POP_ADJ} points better on screening
                   rates (older patients get screened more). Three additional measures are scored by CMS without any ACO
@@ -847,7 +913,7 @@ export default function AppPlusPathwayLab() {
                 <StatusLamp on={mach.outcomeOK} label="At least one outcome measure (001, 236, or a claims outcome measure) beat the bottom 10%" />
                 <StatusLamp on={mach.otherOK} label="At least one of the remaining seven measures (incl. CAHPS + claims) reached the 40th percentile" />
               </div>
-              <ThresholdStrip value={mach.q} threshold={QPS} flagLabel="40th pctile (illus. 55)" dimmed={mach.deemed} />
+              <ThresholdStrip value={mach.q} threshold={QPS} flagLabel="passing bar 73.85 (real '26)" dimmed={mach.deemed} />
               <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <WireIcon binary color={statusColor} />
                 <span style={{ fontSize: 13, fontWeight: 700, color: statusColor, ...mono }}>
@@ -943,8 +1009,9 @@ export default function AppPlusPathwayLab() {
             built from ACO submissions; the toggle applies the pending July 2026 proposed rule that would replace them
             with flat bands (final decision expected November 2026). The data-capture and Medicare-population
             adjustments are illustrative modeling assumptions. The Medicare eCQM method (*) does not exist until 2027
-            and only if finalized. The passing threshold is a simplified stand-in for the annually published 40th-percentile
-            value; sharing and loss rates follow the statutory track rules (40% BASIC A–B, 50% C–E, 75% ENHANCED;
+            and only if finalized. The passing threshold is CMS's real published PY2026 value (73.85); because the lab awards
+            whole-decile points (real MIPS awards fractional 1.0–10.9 within a decile), its scores read a few points
+            below CMS's scale — treat near-bar outcomes as borderline. Sharing and loss rates follow the statutory track rules (40% BASIC A–B, 50% C–E, 75% ENHANCED;
             losses none / flat 30% / quality-scaled respectively), and savings are shared only past the ACO's
             minimum savings rate (the low-revenue half-rate exception is not modeled). MIPS CQM (†) is available
             for PY2026 but sunsets afterward under current law; CMS-1848-P proposes an extension. Dollar figures are rough estimates for learning

@@ -143,10 +143,11 @@ per-clinician QP status and billing arrangements with no public data source.
   that 83.1 is Web-Interface-dominated: PY2024 digital-only reporters' median
   was 74.58 (70.97 excluding EUC-floored ACOs) — the right comparator for an
   all-digital measure set. Comparisons across strategies remain valid.
-- The QPS threshold is an illustrative stand-in (the published PY2026
-  comparator is 73.85 on the real MIPS scale). Sharing and loss rates and the
-  minimum savings rate follow statutory track rules, applied to the lab's
-  compressed score scale; the low-revenue half-rate exception is not modeled.
+- The QPS threshold is CMS's published PY2026 value (73.85). The lab awards
+  whole-decile points (no fractional 1.0–10.9), so its scores read a few
+  points below CMS's scale — treat near-bar outcomes as borderline. Sharing
+  and loss rates and the minimum savings rate follow statutory track rules;
+  the low-revenue half-rate exception is not modeled.
 - The § 425.512(a)(7)(ii)(B) 40th-percentile score floor (73.85 for PY2026)
   is not modeled: whether its trigger fires when 112/113 lack pre-year
   benchmarks is genuinely unsettled (CMS's July 2026 preamble suggests not).
