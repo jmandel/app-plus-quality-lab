@@ -674,7 +674,7 @@ export default function AppPlusPathwayLab() {
         table.cmp td:first-child,table.cmp th:first-child{text-align:left}
       `}</style>
       <div style={{ backgroundImage: `linear-gradient(${T.grid} 1px, transparent 1px), linear-gradient(90deg, ${T.grid} 1px, transparent 1px)`, backgroundSize: "28px 28px" }}>
-        <div style={{ maxWidth: 1600, margin: "0 auto", padding: "26px 16px 60px" }}>
+        <div style={{ padding: "26px 20px 60px" }}>
 
           {/* title block */}
           <div style={{ border: `2px solid ${T.ink}`, background: T.film, borderRadius: 4, display: "flex", flexWrap: "wrap", marginBottom: 18 }}>
