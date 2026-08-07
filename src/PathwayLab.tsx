@@ -805,6 +805,9 @@ export default function AppPlusPathwayLab() {
             </div>
           </Panel>
 
+          </div>
+          <div className="lab-out">
+
           {/* stations */}
           <Panel title="The five reported measures — each scored against its method's real benchmark" tag="taller rung = wider scoring band" style={{ marginBottom: 12 }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(205px, 1fr))", gap: 8 }}>
@@ -827,8 +830,6 @@ export default function AppPlusPathwayLab() {
             </p>
           </Panel>
 
-          </div>
-          <div className="lab-out">
 
           {/* waterfall + rails */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))", gap: 12, marginBottom: 12 }}>
@@ -911,7 +912,11 @@ export default function AppPlusPathwayLab() {
               bonus is per-measure), but Medicare-only methods make the automatic-pass rule an all-or-nothing question
               across measures — so the calculator simply evaluates all 243 assignments available for 2026 and shows
               the one with the highest combined dollars (Medicare eCQM appears as a preview row but is excluded from
-              the search — it doesn't exist until 2027, and only if finalized). Differences across rows come from the benchmark tables, electronic
+              the search — it doesn't exist until 2027, and only if finalized). Dollar ties are broken by the higher
+              quality score: in a savings year above the minimum savings rate, every strategy that passes the standard
+              pays the same dollars — the sharing rate saturates at the track cap — so "Best mix" is then the
+              highest-score route to that money. The score still matters for public reporting, as the fallback if the
+              automatic pass ever breaks, and for loss scaling in ENHANCED. Differences across rows come from the benchmark tables, electronic
               data-capture losses, the 7-point cap on measure 134 under MIPS CQM (marked ᶜ), and which methods carry
               the automatic-pass rule and the electronic reporting bonus.
             </p>
