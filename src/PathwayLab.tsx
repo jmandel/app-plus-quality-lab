@@ -295,6 +295,7 @@ const RATE_PINS: Record<MeasureId, Pin[]> = {
 const BENCH_PINS: Pin[] = [{ p: "p10", v: 76 }, { p: "p25", v: 106 }, { p: "p50", v: 177 }, { p: "p75", v: 331 }, { p: "p90", v: 604 }];
 const GROSS_PINS: Pin[] = [{ p: "p10", v: -0.4 }, { p: "p25", v: 2.0 }, { p: "p50", v: 4.2 }, { p: "p75", v: 7.0 }, { p: "p90", v: 10.4 }];
 const CAPTURE_PINS: Pin[] = [{ p: "low", v: 75 }, { p: "default", v: 85 }, { p: "top-rung", v: 93 }, { p: "perfect", v: 100 }];
+const MSR_PINS: Pin[] = [{ p: "elect", v: 0 }, { p: "24k benes", v: 2.5 }, { p: "13k", v: 2.8 }, { p: "8k", v: 3.2 }];
 
 function PinRow({ pins, cur, onPick, fmt, color = T.ink }: { pins: Pin[]; cur: number; onPick: (v: number) => void; fmt: (v: number) => string; color?: string }) {
   return (
@@ -584,26 +585,32 @@ export default function AppPlusPathwayLab() {
   const [grossPct, setGrossPct] = useState(s0.grossPct);
   const [proposedFlat, setProposedFlat] = useState(false);
   const [benchmarkM, setBenchmarkM] = useState(s0.benchmarkM);
+  const [track, setTrack] = useState<TrackKey>(s0.track);
+  const [msr, setMsr] = useState(s0.msr);
 
   const scen = SCENARIOS[scenario];
   const load = (key: ScenarioKey) => {
     const s = SCENARIOS[key];
     setScenario(key); setRates({ ...s.rates }); setGrossPct(s.grossPct);
-    setBenchmarkM(s.benchmarkM);
+    setBenchmarkM(s.benchmarkM); setTrack(s.track); setMsr(s.msr);
     setGates({ "001": true, "134": true, "236": true, "112": true, "113": true });
   };
+  // Presets expose their implied data: once any scenario-derived input deviates, Step 1 shows Custom.
+  const isCustom = MEASURES.some((m) => rates[m.id] !== scen.rates[m.id])
+    || benchmarkM !== scen.benchmarkM || Math.abs(grossPct - scen.grossPct) > 1e-9
+    || track !== scen.track || Math.abs(msr - scen.msr) > 1e-9;
   const routeAll = (k: PathwayId) => setRouting({ "001": k, "134": k, "236": k, "112": k, "113": k });
   const allSame = PATHWAYS.find((k) => MEASURES.every((m) => routing[m.id] === k));
 
   const mach = useMemo(() => runMachine(routing, rates, gates, capture, scen.fixedPts, proposedFlat), [routing, rates, gates, capture, scen, proposedFlat]);
-  const fin = useMemo(() => settle(mach, { grossPct, benchmarkM, track: scen.track, msr: scen.msr }), [mach, grossPct, benchmarkM, scen]);
+  const fin = useMemo(() => settle(mach, { grossPct, benchmarkM, track, msr }), [mach, grossPct, benchmarkM, track, msr]);
   const marginal = useMemo(() => {
     const plus = { ...mach, total: Math.min(mach.total + 1, mach.available), q: (Math.min(mach.total + 1, mach.available) / mach.available) * 100 };
     plus.status = plus.deemed ? "DEEMED" : plus.q >= QPS ? "MET" : plus.outcomeOK ? "ALT" : "FAILED";
-    const base$ = settle(mach, { grossPct, benchmarkM, track: scen.track, msr: scen.msr }).net$;
-    const plus$ = settle(plus, { grossPct, benchmarkM, track: scen.track, msr: scen.msr }).net$;
+    const base$ = settle(mach, { grossPct, benchmarkM, track, msr }).net$;
+    const plus$ = settle(plus, { grossPct, benchmarkM, track, msr }).net$;
     return (plus$ - base$) * 1000;
-  }, [mach, grossPct, benchmarkM, scen]);
+  }, [mach, grossPct, benchmarkM, track, msr]);
 
   // Comparison rows: four uniform strategies, the current configuration, and the exact best
   // mixed assignment. Among eCQM/MIPS CQM only, per-measure greedy is provably optimal
@@ -614,7 +621,7 @@ export default function AppPlusPathwayLab() {
   // 2027) — leaving 3^5 = 243 assignments; its uniform row stays visible as a preview.
   const comparison = useMemo(() => {
     const ALLPASS: Gates = { "001": true, "134": true, "236": true, "112": true, "113": true };
-    const finP = { grossPct, benchmarkM, track: scen.track, msr: scen.msr };
+    const finP = { grossPct, benchmarkM, track, msr };
     const evalR = (r: Routing, g: Gates) => { const m = runMachine(r, rates, g, capture, scen.fixedPts, proposedFlat); return { m, f: settle(m, finP) }; };
     const rows: ComparisonRow[] = PATHWAYS.map((k) => ({
       key: k, label: `All ${CT[k].label}${CT[k].proposed ? "*" : ""}${CT[k].sunset ? "†" : ""}`, labelColor: CT[k].color,
@@ -631,7 +638,7 @@ export default function AppPlusPathwayLab() {
     rows.push({ key: "cfg", label: "As configured above", labelColor: T.ink, showMethods: true, ...evalR(routing, gates) });
     rows.push({ key: "best", label: "Best mix (all 243 PY26-legal checked)", labelColor: T.money, showMethods: true, ...best! });
     return rows;
-  }, [rates, capture, grossPct, benchmarkM, scen, proposedFlat, routing, gates]);
+  }, [rates, capture, grossPct, benchmarkM, track, msr, scen, proposedFlat, routing, gates]);
 
   // Routing behind the "Best mix" row, reconstructed from its per-measure results,
   // so Step 2 can offer a one-click apply.
@@ -698,17 +705,30 @@ export default function AppPlusPathwayLab() {
 
           {/* scenario + master switch */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))", gap: 12, marginBottom: 12 }}>
-            <Panel title="Step 1 · Pick an example ACO" tag={`$${benchmarkM}M cost benchmark · ${TRACKS[scen.track].label}`}>
+            <Panel title="Step 1 · Pick an example ACO" tag={`$${benchmarkM}M cost benchmark · ${TRACKS[track].label}${isCustom ? " · custom" : ""}`}>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
-                {Object.values(SCENARIOS).map((s) => (
-                  <button key={s.key} onClick={() => load(s.key)} style={{
-                    padding: "5px 11px", borderRadius: 3, cursor: "pointer", fontSize: 12, fontWeight: 600, ...sans,
-                    border: `1.5px solid ${scenario === s.key ? T.ink : T.line}`,
-                    background: scenario === s.key ? T.ink : "#fff", color: scenario === s.key ? "#fff" : T.inkSoft,
-                  }}>{s.name}</button>
-                ))}
+                {Object.values(SCENARIOS).map((s) => {
+                  const active = scenario === s.key && !isCustom;
+                  return (
+                    <button key={s.key} onClick={() => load(s.key)} style={{
+                      padding: "5px 11px", borderRadius: 3, cursor: "pointer", fontSize: 12, fontWeight: 600, ...sans,
+                      border: `1.5px solid ${active ? T.ink : T.line}`,
+                      background: active ? T.ink : "#fff", color: active ? "#fff" : T.inkSoft,
+                    }}>{s.name}</button>
+                  );
+                })}
+                {isCustom && (
+                  <span title="one or more Step 3 inputs deviate from the preset" style={{
+                    padding: "5px 11px", borderRadius: 3, fontSize: 12, fontWeight: 600, ...sans,
+                    border: `1.5px dashed ${T.money}`, background: "#fff", color: T.money,
+                  }}>Custom</span>
+                )}
               </div>
-              <p style={{ fontSize: 12, color: T.inkSoft, margin: 0, lineHeight: 1.5 }}>{scen.story}</p>
+              <p style={{ fontSize: 12, color: T.inkSoft, margin: 0, lineHeight: 1.5 }}>
+                {isCustom
+                  ? `Custom inputs — started from "${scen.name}". Every preset value is a live Step 3 control (care rates, benchmark, savings rate, track, minimum savings rate); click a preset to snap back.`
+                  : scen.story}
+              </p>
             </Panel>
 
             <Panel title="Step 2 · Choose a reporting method for all five measures" tag={allSame ? CT[allSame].label : isBestApplied ? "best mix applied" : "mixed (set per measure below)"}>
@@ -830,9 +850,32 @@ export default function AppPlusPathwayLab() {
                 <div style={{ margin: "0 0 3px" }}>
                   <PinRow pins={BENCH_PINS} cur={benchmarkM} onPick={setBenchmarkM} fmt={(v) => `$${v}M`} />
                 </div>
+                <div style={{ margin: "8px 0 3px", fontSize: 10, ...mono, color: T.inkSoft }}>TRACK</div>
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                  {(Object.keys(TRACKS) as TrackKey[]).map((k) => (
+                    <button key={k} onClick={() => setTrack(k)} style={{
+                      border: `1px solid ${track === k ? T.ink : T.line}`, background: track === k ? T.ink : "#fff",
+                      color: track === k ? "#fff" : T.inkSoft, borderRadius: 2, padding: "2px 6px",
+                      fontSize: 9, ...mono, cursor: "pointer", whiteSpace: "nowrap",
+                    }}>
+                      {TRACKS[k].label.replace(" (one-sided)", "")}
+                    </button>
+                  ))}
+                </div>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, ...mono, color: T.inkSoft, margin: "7px 0 0" }}>
+                  <span style={{ width: 100, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>min savings rate</span>
+                  <input type="range" min={0} max={4} step={0.1} value={msr} onChange={(e) => setMsr(+e.target.value)} style={{ flex: 1, accentColor: T.ink }} aria-label="minimum savings rate" />
+                  <b style={{ width: 56, color: T.ink, whiteSpace: "nowrap", textAlign: "right" }}>{msr.toFixed(1)}%</b>
+                </label>
+                <div style={{ margin: "2px 0 3px" }}>
+                  <PinRow pins={MSR_PINS} cur={msr} onPick={setMsr} fmt={(v) => `${v.toFixed(1)}%`} />
+                </div>
                 <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "3px 0 0", lineHeight: 1.45 }}>
                   Cost benchmark sizes the savings/loss pool; pins are updated-benchmark percentiles of the real 476
-                  PY2024 ACOs. Selecting a scenario in Step 1 resets these to that ACO's profile.
+                  PY2024 ACOs. Track sets the sharing cap (40% BASIC A–B / 50% C–E / 75% ENHANCED) and the loss rail
+                  (none / flat 30% / quality-scaled). One-sided BASIC ACOs get a size-based sliding-scale minimum
+                  savings rate (the MSR pins show real values by ACO size); two-sided tracks may elect lower, down
+                  to 0%. Selecting a scenario in Step 1 resets all of these; changing any makes it a custom ACO.
                 </p>
               </div>
               <div>
@@ -948,11 +991,11 @@ export default function AppPlusPathwayLab() {
                 </span>
               </div>
               <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 5, fontSize: 11, ...mono, color: T.inkSoft }}>
-                <span>{TRACKS[scen.track].label} track — sharing capped at {TRACKS[scen.track].maxShare}%{scen.msr > 0 ? `, savings shared only past the ${scen.msr.toFixed(1)}% minimum savings rate` : ""}</span>
-                <span>ACO keeps <b style={{ color: T.money }}>{fin.sharePct.toFixed(0)}%</b> of any savings → <b style={{ color: T.money }}>{fmt$(fin.savings$)}</b>{grossPct > 0 && grossPct < scen.msr ? " — under the minimum savings rate, nothing is shared" : ""}</span>
-                {TRACKS[scen.track].loss === "none"
+                <span>{TRACKS[track].label} track — sharing capped at {TRACKS[track].maxShare}%{msr > 0 ? `, savings shared only past the ${msr.toFixed(1)}% minimum savings rate` : ""}</span>
+                <span>ACO keeps <b style={{ color: T.money }}>{fin.sharePct.toFixed(0)}%</b> of any savings → <b style={{ color: T.money }}>{fmt$(fin.savings$)}</b>{grossPct > 0 && grossPct < msr ? " — under the minimum savings rate, nothing is shared" : ""}</span>
+                {TRACKS[track].loss === "none"
                   ? <span>one-sided track: <b style={{ color: T.money }}>no shared losses</b></span>
-                  : TRACKS[scen.track].loss === "flat30"
+                  : TRACKS[track].loss === "flat30"
                     ? <span>ACO repays a flat <b style={{ color: T.debt }}>30%</b> of any overspend → <b style={{ color: T.debt }}>{fmt$(fin.losses$)}</b> (fixed — does not move with quality)</span>
                     : <span>ACO repays <b style={{ color: T.debt }}>{fin.lossPct.toFixed(0)}%</b> of any overspend → <b style={{ color: T.debt }}>{fmt$(fin.losses$)}</b> (higher quality score = smaller repayment)</span>}
                 <span style={{ borderTop: `1px solid ${T.line}`, paddingTop: 5 }}>combined result: <b style={{ color: fin.net$ >= 0 ? T.money : T.debt, fontSize: 14 }}>{fmt$(fin.net$)}</b> · one extra quality point is currently worth <b style={{ color: marginal >= 0 ? T.money : T.debt }}>{marginal >= 0 ? "+" : ""}${Math.abs(marginal) >= 1000 ? (marginal / 1000).toFixed(2) + "M" : marginal.toFixed(0) + "k"}</b></span>
