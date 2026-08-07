@@ -457,7 +457,7 @@ function RealLadder({ bench, inverse, color, measured, height = 92 }: { bench: B
 
 /* ---------------- station ---------------- */
 
-function Station({ row, gate, onRoute }: { row: MeasureRow; gate: boolean; onRoute: (id: MeasureId, k: PathwayId) => void }) {
+function Station({ row, gate, onRoute, onRate }: { row: MeasureRow; gate: boolean; onRoute: (id: MeasureId, k: PathwayId) => void; onRate: (id: MeasureId, v: number) => void }) {
   const ct = CT[row.pathway];
   const line: React.CSSProperties = { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
   return (
@@ -487,7 +487,10 @@ function Station({ row, gate, onRoute }: { row: MeasureRow; gate: boolean; onRou
       <div style={{ display: "flex", gap: 10, height: 112, alignItems: "stretch" }}>
         <RealLadder bench={row.bench} inverse={row.inverse} color={ct.color} measured={row.measured} height={112} />
         <div style={{ flex: 1, minWidth: 0, fontSize: 10, ...mono, color: T.inkSoft, display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={line}>care rate: <b style={{ color: T.ink }}>{row.underlying}%</b></span>
+          <span style={{ display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>care
+            <input type="range" min={5} max={95} value={row.underlying} onChange={(e) => onRate(row.id, +e.target.value)} style={{ flex: 1, minWidth: 0, accentColor: T.ink }} aria-label={`underlying rate ${row.id}`} />
+            <b style={{ color: T.ink, flexShrink: 0 }}>{row.underlying}%</b>
+          </span>
           <span style={line}>measured ({ct.label.replace("Medicare ", "M-")}): <b style={{ color: ct.color }}>{row.measured.toFixed(1)}%</b></span>
           <span style={line}>ladder: {row.bench.est ? "2025 est. — no '26 bench" : row.bench.kind}{row.bench.topped ? " · TOPPED" : ""}</span>
           <span style={line}>{row.excluded
@@ -496,6 +499,7 @@ function Station({ row, gate, onRoute }: { row: MeasureRow; gate: boolean; onRou
           {!gate && <span style={{ ...line, color: T.fail, fontWeight: 700 }}>REPORTING FAILURE — scored 0</span>}
         </div>
       </div>
+      <PinRow pins={RATE_PINS[row.id]} cur={row.underlying} onPick={(v) => onRate(row.id, v)} fmt={(v) => `${v}`} />
       <div style={{ display: "flex", gap: 4, ...mono, fontSize: 9.5, height: 20, alignItems: "center" }}>
         {row.coa > 0 && (
           <span style={{
@@ -796,28 +800,6 @@ export default function AppPlusPathwayLab() {
           <Panel title="Step 3 · Adjust the inputs" style={{ marginBottom: 12 }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 14 }}>
               <div>
-                <div style={{ fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 6, minHeight: 16 }}>UNDERLYING CARE RATES (%) — chips jump to registry-reported percentiles</div>
-                {MEASURES.map((m) => (
-                  <div key={m.id} style={{ marginBottom: 6 }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 1 }}>
-                      <span style={{ width: 26 }}>{m.id}</span>
-                      <input type="range" min={5} max={95} value={rates[m.id]} onChange={(e) => setRates({ ...rates, [m.id]: +e.target.value })} style={{ flex: 1, accentColor: T.ink }} aria-label={`underlying rate ${m.id}`} />
-                      <b style={{ width: 30, color: T.ink }}>{rates[m.id]}%</b>
-                    </label>
-                    <div style={{ margin: "0 0 0 32px" }}>
-                      <PinRow pins={RATE_PINS[m.id]} cur={rates[m.id]} onPick={(v) => setRates({ ...rates, [m.id]: v })} fmt={(v) => `${v}`} />
-                    </div>
-                  </div>
-                ))}
-                <p style={{ fontSize: 9.5, color: T.inkFaint, margin: "4px 0 0", lineHeight: 1.4 }}>
-                  Pins are percentiles of registry-reported (chart-review) rates, which carry no structured-capture
-                  loss — the closest public stand-in for true care rates: 001/134/236 from CMS's 2026 Medicare CQM
-                  tables (real ACO submissions, Medicare patients), 112/113 from the 2025 MIPS CQM file (all
-                  reporters). They are NOT eCQM distributions — route a measure to eCQM to see why electronic
-                  measured rates run lower. For 001, percentiles are of performance, so lower is better.
-                </p>
-              </div>
-              <div>
                 <div style={{ fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 6, minHeight: 16 }}>eCQM DATA-CAPTURE EFFICIENCY: <b style={{ color: CT.ecqm.color }}>{(capture * 100).toFixed(0)}%</b></div>
                 <input type="range" min={0.65} max={1} step={0.01} value={capture} onChange={(e) => setCapture(+e.target.value)} style={{ width: "100%", accentColor: CT.ecqm.color }} aria-label="capture efficiency" />
                 <div style={{ margin: "2px 0 0" }}>
@@ -921,13 +903,17 @@ export default function AppPlusPathwayLab() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(205px, 1fr))", gap: 8 }}>
               {mach.rows.map((r) => (
                 <Station key={r.id} row={r} gate={gates[r.id]}
-                  onRoute={(id, k) => setRouting({ ...routing, [id]: k })} />
+                  onRoute={(id, k) => setRouting({ ...routing, [id]: k })}
+                  onRate={(id, v) => setRates({ ...rates, [id]: v })} />
               ))}
             </div>
             <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "8px 0 0", lineHeight: 1.5 }}>
               How to read a card: the ladder is the benchmark for the chosen method — ten bands worth 1 to 10 points,
-              drawn to scale from CMS's real 2026 tables. The "measured" rate is where this ACO lands after the
-              data-capture and population adjustments above. (To simulate a measure failing CMS's minimum reporting
+              drawn to scale from CMS's real 2026 tables (hover a rung for its cutpoints). The "care" slider is the
+              ACO's true care rate; its chips jump to registry-reported percentiles — real chart-review rates with no
+              capture loss (001/134/236: CMS's 2026 Medicare CQM tables from actual ACO submissions; 112/113: the
+              2025 MIPS CQM file; for 001 they are performance percentiles, so lower is better). The "measured" rate
+              is where this ACO lands after the data-capture and population adjustments (Step 3). (To simulate a measure failing CMS's minimum reporting
               requirements, use the checkboxes in Step 3.) 2026 quirks: measures
               112 and 113 have NO published 2026 benchmark under eCQM or MIPS CQM (dashed ladders — CMS will set the
               benchmark after submission; 2025 values shown as estimates, and the lab excludes these measures from
