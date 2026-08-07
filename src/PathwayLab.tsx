@@ -428,19 +428,21 @@ function ThresholdStrip({ value, threshold, flagLabel, markerColor = T.ink, dimm
 function RealLadder({ bench, inverse, color, measured, height = 92 }: { bench: Bench; inverse: boolean; color: string; measured: number; height?: number }) {
   const bounds = (inverse ? bench.caps : bench.floors)!;
   const dec = decileWith(bench, inverse, measured);
-  const bands: { d: number; wdt: number }[] = [];
+  const bands: { d: number; wdt: number; lo: number; hi: number }[] = [];
   for (let i = 0; i < 10; i++) {
     if (bounds[i] === null) continue;
-    let wdt: number;
-    if (inverse) { const hi = bounds[i]!, lo = i < 9 && bounds[i + 1] !== null ? bounds[i + 1]! : 0; wdt = hi - lo; }
-    else { const lo = bounds[i]!; let hi = 100; for (let j = i + 1; j < 10; j++) if (bounds[j] !== null) { hi = bounds[j]!; break; } wdt = i === 9 ? Math.max(100 - lo, 2) : hi - lo; }
-    bands.push({ d: i + 1, wdt: Math.max(wdt, 1.5) });
+    let wdt: number, lo: number, hi: number;
+    if (inverse) { hi = bounds[i]!; lo = i < 9 && bounds[i + 1] !== null ? bounds[i + 1]! : 0; wdt = hi - lo; }
+    else { lo = bounds[i]!; hi = 100; for (let j = i + 1; j < 10; j++) if (bounds[j] !== null) { hi = bounds[j]!; break; } if (i === 9) hi = 100; wdt = i === 9 ? Math.max(100 - lo, 2) : hi - lo; }
+    bands.push({ d: i + 1, wdt: Math.max(wdt, 1.5), lo, hi });
   }
   return (
     <div style={{ display: "flex", flexDirection: "column-reverse", gap: 1, height, opacity: bench.est ? 0.75 : 1 }}
       title={`${bench.kind}${bench.topped ? " · topped out, 7-pt cap" : ""}`}>
       {bands.map((band) => (
-        <div key={band.d} style={{
+        <div key={band.d}
+          title={`decile ${band.d}: ${inverse ? `${band.hi}% down to ${band.lo}% (lower = better)` : `${band.lo}% up to ${band.hi}%`} → ${bench.cap ? Math.min(band.d, bench.cap) : band.d} pts${bench.cap && band.d > bench.cap ? ` (capped at ${bench.cap})` : ""}${bench.est ? " · 2025 estimate" : ""}`}
+          style={{
           flexGrow: band.wdt, flexBasis: 0, width: 20, position: "relative",
           background: band.d <= dec ? color : "#fff",
           border: `1px ${bench.est ? "dashed" : "solid"} ${band.d <= dec ? color : T.line}`,
