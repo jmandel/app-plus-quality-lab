@@ -134,32 +134,29 @@ interface Scenario {
   fixedPts: FixedPts;
   benchmarkM: number;
   grossPct: number;
-  partB: number;
-  tins: number;
-  skew: number;
 }
 
 const SCENARIOS: Record<ScenarioKey, Scenario> = {
   strong: {
     key: "strong", name: "Integrated high performer",
-    story: "An integrated health system ACO: 24,000 assigned Medicare patients (75th percentile of real 2024 ACOs), a few large consolidated practice groups, an experienced quality team, and spending 7.0% under its cost benchmark — a 75th-percentile 2024 financial result. It's in the ENHANCED track (an Advanced APM), so nearly all its clinicians are Qualified APM Participants — exempt from MIPS — leaving only a small slice of billing exposed to the clinician fee adjustment. Its clinical performance is strong on every measure; the open question is which reporting method turns that performance into the most points and dollars.",
+    story: "An integrated health system ACO: 24,000 assigned Medicare patients (75th percentile of real 2024 ACOs), a few large consolidated practice groups, an experienced quality team, and spending 7.0% under its cost benchmark — a 75th-percentile 2024 financial result. It's in the ENHANCED track (an Advanced APM), so nearly all its clinicians are Qualified APM Participants — exempt from MIPS. Its clinical performance is strong on every measure; the open question is which reporting method turns that performance into the most points and dollars.",
     rates: { "001": 17, "134": 76, "236": 79, "112": 77, "113": 73 },
     fixedPts: { cahps: 7, claims1: 6, claims2: 7 },
-    benchmarkM: 330, grossPct: 7.0, partB: 15, tins: 7, skew: 0.75,
+    benchmarkM: 330, grossPct: 7.0,
   },
   middle: {
     key: "middle", name: "Middle-of-the-road regional",
-    story: "A regional ACO built to match the median real 2024 ACO: 13,000 assigned patients, 19 practice groups on four different electronic health records, spending 4.2% under benchmark. It's in BASIC Level B (not an Advanced APM), so ALL of its clinicians remain subject to MIPS — the full Part B base rides on the quality score. Average clinical performance. Note how measure 134 (depression screening) scores very differently by method — a 64% rate lands low on the MIPS CQM ladder (practices reporting that way average 86%) but mid-to-high on the electronic ladder — while measure 236 (blood pressure) runs the opposite direction.",
+    story: "A regional ACO built to match the median real 2024 ACO: 13,000 assigned patients, 19 practice groups on four different electronic health records, spending 4.2% under benchmark. It's in BASIC Level B (not an Advanced APM), so ALL of its clinicians remain subject to MIPS. Average clinical performance. Note how measure 134 (depression screening) scores very differently by method — a 64% rate lands low on the MIPS CQM ladder (practices reporting that way average 86%) but mid-to-high on the electronic ladder — while measure 236 (blood pressure) runs the opposite direction.",
     rates: { "001": 24, "134": 64, "236": 72, "112": 69, "113": 66 },
     fixedPts: { cahps: 6, claims1: 5, claims2: 6 },
-    benchmarkM: 177, grossPct: 4.2, partB: 60, tins: 19, skew: 0.5,
+    benchmarkM: 177, grossPct: 4.2,
   },
   safetynet: {
     key: "safetynet", name: "Safety-net / rural network",
-    story: "A safety-net ACO: 8,000 assigned patients (25th percentile) across 24 small independent practices, and it spent 0.5% more than its cost benchmark — a bottom-decile 2024 financial result, so it may owe money back to Medicare (in BASIC Level A, actual loss repayment wouldn't apply — treat the loss figure as illustrating a two-sided variant). Its clinicians are all MIPS-subject. In this situation the quality score matters even more, because a higher score reduces how much of the loss the ACO must repay and protects its clinicians' Medicare fee rates.",
+    story: "A safety-net ACO: 8,000 assigned patients (25th percentile) across 24 small independent practices, and it spent 0.5% more than its cost benchmark — a bottom-decile 2024 financial result, so it may owe money back to Medicare (in BASIC Level A, actual loss repayment wouldn't apply — treat the loss figure as illustrating a two-sided variant). Its clinicians are all MIPS-subject. In this situation the quality score matters even more, because a higher score reduces how much of the loss the ACO must repay.",
     rates: { "001": 33, "134": 52, "236": 63, "112": 56, "113": 49 },
     fixedPts: { cahps: 5, claims1: 4, claims2: 5 },
-    benchmarkM: 95, grossPct: -0.5, partB: 30, tins: 24, skew: 0.15,
+    benchmarkM: 95, grossPct: -0.5,
   },
 };
 
@@ -252,8 +249,6 @@ function runMachine(routing: Routing, rates: Rates, gates: Gates, capture: numbe
 interface FinInputs {
   grossPct: number;
   benchmarkM: number;
-  partB: number;
-  clinOn?: boolean;
 }
 interface Settlement {
   sharePct: number;
@@ -261,8 +256,6 @@ interface Settlement {
   gross: number;
   savings$: number;
   losses$: number;
-  clin: number;
-  adjPct: number;
   net$: number;
 }
 
@@ -272,10 +265,8 @@ function settle(mach: Machine, fin: FinInputs): Settlement {
   const gross = (fin.grossPct / 100) * fin.benchmarkM;
   const savings$ = gross > 0 ? (sharePct / 100) * gross : 0;
   const losses$ = gross < 0 ? (lossPct / 100) * gross : 0;
-  const clin = 0.5 * mach.q + 0.3 * 82 + 0.2 * 100;
-  const adjPct = clin >= 75 ? ((clin - 75) / 25) * 2.0 : -(9 * (75 - clin)) / 75;
-  const net$ = savings$ + losses$ + (fin.clinOn === false ? 0 : (adjPct / 100) * fin.partB);
-  return { sharePct, lossPct, gross, savings$, losses$, clin, adjPct, net$ };
+  const net$ = savings$ + losses$;
+  return { sharePct, lossPct, gross, savings$, losses$, net$ };
 }
 
 /* ---------------- glyphs (carried from rev 3) ---------------- */
@@ -323,50 +314,6 @@ function StatusLamp({ on, label }: { on: boolean; label: string }) {
     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
       <div style={{ width: 10, height: 10, borderRadius: "50%", flexShrink: 0, background: on ? T.pass : "#fff", border: `2px solid ${on ? T.pass : T.fail}`, boxShadow: on ? `0 0 6px ${T.pass}` : "none" }} />
       <span style={{ fontSize: 11, color: T.ink }}>{label}</span>
-    </div>
-  );
-}
-/* Fan-out: one shared adjustment rate, stated once on a rail; tiles below carry only
-   each practice group's own billing and dollar consequence. Sizes follow a geometric
-   mix set by `skew`: 0 = all equal, higher = a few large groups dominate. */
-function TinRoster({ n, adjPct, partB, skew }: { n: number; adjPct: number; partB: number; skew: number }) {
-  const good = adjPct >= 0;
-  const col = good ? T.pass : T.fail;
-  const r = 1 - 0.92 * skew;
-  const raw = Array.from({ length: n }, (_, i) => Math.pow(r, i));
-  const tot = raw.reduce((a, b) => a + b, 0);
-  const shares = raw.map((w) => w / tot);
-  const wMax = shares[0];
-  const fmtM = (v: number) => v >= 9.95 ? `$${v.toFixed(0)}M` : v >= 0.995 ? `$${v.toFixed(1)}M` : `$${Math.max(Math.round(v * 1000), 1)}k`;
-  return (
-    <div>
-      {/* The shared rate, once — the rail every tile hangs from */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 2 }}>
-        <span style={{ ...mono, fontSize: 10, color: T.inkSoft }}>SHARED FEE ADJUSTMENT</span>
-        <span style={{ ...mono, fontSize: 16, fontWeight: 700, color: col }}>{good ? "+" : "−"}{Math.abs(adjPct).toFixed(1)}%</span>
-        <span style={{ fontSize: 10, color: T.inkFaint }}>— one rate, applied to every practice group's own Medicare billing</span>
-      </div>
-      <div style={{ height: 10, borderLeft: `2px solid ${col}`, marginLeft: 7 }} />
-      <div style={{ borderTop: `2px solid ${col}`, marginLeft: 7, marginRight: 7 }} />
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 5, paddingTop: 8, position: "relative" }}>
-        {shares.map((sh, i) => {
-          const bill = sh * partB;
-          const eff = Math.abs((adjPct / 100) * bill);
-          return (
-            <div key={i} title={`TIN ${i + 1}: ${fmtM(bill)} of MIPS-affected billing × ${adjPct.toFixed(1)}% = ${good ? "+" : "−"}${fmtM(eff)}`}
-              style={{
-                width: 64 + Math.round(56 * (sh / wMax)), borderRadius: 3, padding: "4px 7px", ...mono,
-                border: `1.5px solid ${col}`, background: "#fff",
-              }}>
-              <div style={{ fontSize: 8, color: T.inkFaint, display: "flex", justifyContent: "space-between", gap: 4, whiteSpace: "nowrap" }}>
-                <span>TIN {String(i + 1).padStart(2, "0")}</span>
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{fmtM(bill)}</span>
-              </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: col, whiteSpace: "nowrap" }}>{good ? "+" : "−"}{fmtM(eff)}</div>
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }
@@ -559,30 +506,26 @@ export default function AppPlusPathwayLab() {
   const [grossPct, setGrossPct] = useState(s0.grossPct);
   const [proposedFlat, setProposedFlat] = useState(false);
   const [benchmarkM, setBenchmarkM] = useState(s0.benchmarkM);
-  const [partB, setPartB] = useState(s0.partB);
-  const [tins, setTins] = useState(s0.tins);
-  const [skew, setSkew] = useState(s0.skew);
-  const [clinOn, setClinOn] = useState(false);
 
   const scen = SCENARIOS[scenario];
   const load = (key: ScenarioKey) => {
     const s = SCENARIOS[key];
     setScenario(key); setRates({ ...s.rates }); setGrossPct(s.grossPct);
-    setBenchmarkM(s.benchmarkM); setPartB(s.partB); setTins(s.tins); setSkew(s.skew);
+    setBenchmarkM(s.benchmarkM);
     setGates({ "001": true, "134": true, "236": true, "112": true, "113": true });
   };
   const routeAll = (k: PathwayId) => setRouting({ "001": k, "134": k, "236": k, "112": k, "113": k });
   const allSame = PATHWAYS.find((k) => MEASURES.every((m) => routing[m.id] === k));
 
   const mach = useMemo(() => runMachine(routing, rates, gates, capture, scen.fixedPts, proposedFlat), [routing, rates, gates, capture, scen, proposedFlat]);
-  const fin = useMemo(() => settle(mach, { grossPct, benchmarkM, partB, clinOn }), [mach, grossPct, benchmarkM, partB, clinOn]);
+  const fin = useMemo(() => settle(mach, { grossPct, benchmarkM }), [mach, grossPct, benchmarkM]);
   const marginal = useMemo(() => {
     const plus = { ...mach, total: Math.min(mach.total + 1, AVAILABLE), q: (Math.min(mach.total + 1, AVAILABLE) / AVAILABLE) * 100 };
     plus.status = plus.deemed ? "DEEMED" : plus.q >= QPS ? "MET" : plus.outcomeOK ? "ALT" : "FAILED";
-    const base$ = settle(mach, { grossPct, benchmarkM, partB, clinOn }).net$;
-    const plus$ = settle(plus, { grossPct, benchmarkM, partB, clinOn }).net$;
+    const base$ = settle(mach, { grossPct, benchmarkM }).net$;
+    const plus$ = settle(plus, { grossPct, benchmarkM }).net$;
     return (plus$ - base$) * 1000;
-  }, [mach, grossPct, benchmarkM, partB, clinOn]);
+  }, [mach, grossPct, benchmarkM]);
 
   // Comparison rows: four uniform strategies, the current configuration, and the exact best
   // mixed assignment. Among eCQM/MIPS CQM only, per-measure greedy is provably optimal
@@ -591,7 +534,7 @@ export default function AppPlusPathwayLab() {
   // automatic-pass AND-condition, so we simply check all 4^5 = 1,024 assignments exactly.
   const comparison = useMemo(() => {
     const ALLPASS: Gates = { "001": true, "134": true, "236": true, "112": true, "113": true };
-    const finP = { grossPct, benchmarkM, partB, clinOn };
+    const finP = { grossPct, benchmarkM };
     const evalR = (r: Routing, g: Gates) => { const m = runMachine(r, rates, g, capture, scen.fixedPts, proposedFlat); return { m, f: settle(m, finP) }; };
     const rows: ComparisonRow[] = PATHWAYS.map((k) => ({
       key: k, label: `All ${CT[k].label}${CT[k].proposed ? "*" : ""}`, labelColor: CT[k].color,
@@ -607,7 +550,7 @@ export default function AppPlusPathwayLab() {
     rows.push({ key: "cfg", label: "As configured above", labelColor: T.ink, showMethods: true, ...evalR(routing, gates) });
     rows.push({ key: "best", label: "Best mix (all 1,024 checked)", labelColor: T.money, showMethods: true, ...best! });
     return rows;
-  }, [rates, capture, grossPct, benchmarkM, partB, clinOn, scen, proposedFlat, routing, gates]);
+  }, [rates, capture, grossPct, benchmarkM, scen, proposedFlat, routing, gates]);
 
   // Routing behind the "Best mix" row, reconstructed from its per-measure results,
   // so Step 2 can offer a one-click apply.
@@ -664,7 +607,7 @@ export default function AppPlusPathwayLab() {
 
           {/* scenario + master switch */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))", gap: 12, marginBottom: 12 }}>
-            <Panel title="Step 1 · Pick an example ACO" tag={`$${benchmarkM}M cost benchmark · ${tins} practice groups`}>
+            <Panel title="Step 1 · Pick an example ACO" tag={`$${benchmarkM}M cost benchmark`}>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
                 {Object.values(SCENARIOS).map((s) => (
                   <button key={s.key} onClick={() => load(s.key)} style={{
@@ -767,9 +710,6 @@ export default function AppPlusPathwayLab() {
                 <div style={{ fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 6, minHeight: 16 }}>ORGANIZATION (this ACO)</div>
                 {[
                   { label: "cost benchmark", val: benchmarkM, set: setBenchmarkM, min: 40, max: 650, step: 5, fmt: (v: number) => `$${v}M` },
-                  { label: "non-QP Part B", val: partB, set: setPartB, min: 10, max: 200, step: 5, fmt: (v: number) => `$${v}M` },
-                  { label: "practice groups", val: tins, set: setTins, min: 2, max: 100, step: 1, fmt: (v: number) => `${v}` },
-                  { label: "size mix", val: skew, set: setSkew, min: 0, max: 0.9, step: 0.05, fmt: (v: number) => v < 0.1 ? "equal" : v < 0.4 ? "varied" : v < 0.7 ? "top-hvy" : "1 giant" },
                 ].map((s) => (
                   <label key={s.label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, ...mono, color: T.inkSoft, marginBottom: 5 }}>
                     <span style={{ width: 100, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</span>
@@ -777,16 +717,8 @@ export default function AppPlusPathwayLab() {
                     <b style={{ width: 56, color: T.ink, whiteSpace: "nowrap", textAlign: "right" }}>{s.fmt(s.val)}</b>
                   </label>
                 ))}
-                <label style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 10.5, color: T.inkSoft, margin: "2px 0 4px", cursor: "pointer" }}>
-                  <input type="checkbox" checked={clinOn} onChange={(e) => setClinOn(e.target.checked)} />
-                  optional extension: include the clinician fee-adjustment channel in dollar totals (off by default — see model scope, bottom of page)
-                </label>
                 <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "3px 0 0", lineHeight: 1.45 }}>
-                  Cost benchmark sizes the savings/loss pool. "Non-QP Part B" means, specifically: Medicare
-                  professional billing at the ACO's participant practice groups by clinicians who are NOT Qualified
-                  APM Participants — the population whose MIPS score IS the ACO's quality score. Billing those same
-                  clinicians run through outside, non-ACO groups is scored on that group's own MIPS performance and
-                  is out of scope here; the practice-group count and size mix shape the fan-out shown below (mix: equal-sized groups → one dominant group with a long tail). Track note: in Advanced-APM tracks (BASIC Level E, ENHANCED) most clinicians are Qualified APM Participants and exempt from MIPS, so the non-QP base is small; in BASIC A–D every clinician is MIPS-subject. (QP status is also becoming more granular — individual-level determinations began in 2026, and TIN/NPI-level determination is proposed for 2027 — so treat the non-QP base as a spectrum, not all-or-nothing.) Selecting a scenario in
+                  Cost benchmark sizes the savings/loss pool. Selecting a scenario in
                   Step 1 resets these to that ACO's profile.
                 </p>
               </div>
@@ -876,35 +808,12 @@ export default function AppPlusPathwayLab() {
               <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 5, fontSize: 11, ...mono, color: T.inkSoft }}>
                 <span>ACO keeps <b style={{ color: T.money }}>{fin.sharePct.toFixed(0)}%</b> of any savings → <b style={{ color: T.money }}>{fmt$(fin.savings$)}</b></span>
                 <span>ACO repays <b style={{ color: T.debt }}>{fin.lossPct.toFixed(0)}%</b> of any overspend → <b style={{ color: T.debt }}>{fmt$(fin.losses$)}</b> (higher quality score = smaller repayment)</span>
-                <span>clinicians' MIPS score <b style={{ color: fin.clin >= 75 ? T.pass : T.fail }}>{fin.clin.toFixed(1)}</b> → their Medicare fees adjust <b style={{ color: fin.adjPct >= 0 ? T.pass : T.fail }}>{fin.adjPct >= 0 ? "+" : ""}{fin.adjPct.toFixed(1)}%</b> on ${partB}M of billing</span>
                 <span style={{ borderTop: `1px solid ${T.line}`, paddingTop: 5 }}>combined result: <b style={{ color: fin.net$ >= 0 ? T.money : T.debt, fontSize: 14 }}>{fmt$(fin.net$)}</b> · one extra quality point is currently worth <b style={{ color: marginal >= 0 ? T.money : T.debt }}>{marginal >= 0 ? "+" : ""}${Math.abs(marginal) >= 1000 ? (marginal / 1000).toFixed(2) + "M" : marginal.toFixed(0) + "k"}</b></span>
               </div>
             </Panel>
           </div>
 
           {/* pathway comparison */}
-          <Panel title="Where the score lands — every practice group in the ACO" tag={`${tins} TINs · one shared fate`} style={{ marginBottom: 12 }}>
-            {clinOn ? <TinRoster n={tins} adjPct={fin.adjPct} partB={partB} skew={skew} /> : (
-              <p style={{ fontSize: 11, color: T.inkFaint, ...mono, margin: 0 }}>
-                OUT OF DEFAULT SCOPE — clinician fee adjustments involve per-clinician QP status and per-practice billing arrangements this model can't parameterize from public data. The rate is still computed ({fin.adjPct >= 0 ? "+" : ""}{fin.adjPct.toFixed(1)}%); enable the optional extension in Step 3 to include it in totals.
-              </p>
-            )}
-            <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "8px 0 0", lineHeight: 1.5 }}>
-              An ACO reports quality once, as one entity — but the clinician fee adjustment computed from that score
-              applies to every participating practice group (identified by Tax ID Number, "TIN") on its Medicare
-              billing. There is no per-practice score: the strongest and weakest practices in the ACO receive the
-              identical adjustment. Tile width shows each group's share of the ${partB}M of affected billing (set the mix with the practice-size slider in Step 3): the percentage is the same on every tile, so the dollar effect scales with each practice's own billing — a giant group and a tiny one gain or lose the same rate but very different sums. Note this money moves through
-              a different pipe than shared savings: savings arrive as one lump-sum settlement paid to the ACO itself
-              (about a year after the performance year), while the fee adjustment is applied claim-by-claim to each
-              practice's own Medicare payments two years later — 2026 performance sets the rate on claims paid in
-              2028, and the ACO never touches it. It also only affects clinicians below "Qualified APM Participant"
-              thresholds; clinicians above them are exempt from MIPS entirely, which is why the slider is labeled
-              non-QP billing. This is why reporting-method strategy is an ACO-level decision with network-wide
-              consequences — and why a single practice's data problem (simulate one with the failure checkboxes in
-              Step 3) can move every tile on this board at once.
-            </p>
-          </Panel>
-
           <Panel title="Compare: what each reporting method would yield for this ACO" tag="same clinical performance in every row">
             <div style={{ overflowX: "auto" }}>
               <table className="cmp" style={mono}>
@@ -954,10 +863,10 @@ export default function AppPlusPathwayLab() {
             against real 2026 benchmarks; the quality performance standard (met by score or by the reporting
             incentive); the shared-savings rate; and quality-scaled shared losses. That is a complete model of the
             ACO-level settlement — including why the score keeps mattering after the standard is met in a loss year,
-            and why, in a savings year above the threshold, one more point is honestly worth $0. Out of default
-            scope: clinician-level MIPS fee adjustments (available as a labeled optional extension — the mechanism
-            is real but its boundaries depend on per-clinician QP status and billing arrangements with no public
-            data source), fractional within-decile scoring, score uncertainty, and CAHPS/claims-measure variation.
+            and why, in a savings year above the threshold, one more point is honestly worth $0. Out of
+            scope: clinician-level MIPS fee adjustments (the mechanism is real, but its boundaries depend on
+            per-clinician QP status and billing arrangements with no public data source), fractional
+            within-decile scoring, score uncertainty, and CAHPS/claims-measure variation.
           </p>
           <p style={{ fontSize: 11, color: T.inkFaint, marginTop: 10, maxWidth: 920, lineHeight: 1.5 }}>
             Sources and limitations: benchmark tables are CMS's actual published 2026 quality benchmarks. Where CMS
@@ -967,15 +876,13 @@ export default function AppPlusPathwayLab() {
             built from ACO submissions; the toggle applies the pending July 2026 proposed rule that would replace them
             with flat bands (final decision expected November 2026). The data-capture and Medicare-population
             adjustments are illustrative modeling assumptions. The Medicare eCQM method (*) does not exist until 2027
-            and only if finalized. The passing threshold, repayment scaling, and clinician fee-adjustment formula are
+            and only if finalized. The passing threshold and repayment scaling are
             simplified stand-ins for values CMS publishes each year. Dollar figures are rough estimates for learning
             purposes, not financial projections. Example-ACO profiles are calibrated to CMS's actual PY2024 Shared
             Savings Program results and participant files (data.cms.gov, 476 ACOs): the median real ACO had 13,151
             assigned beneficiaries, a $177M updated benchmark ($13,278 per person), 19 participating practice groups,
             and +4.2% gross savings; the strong scenario uses 75th-percentile values and the safety-net scenario
-            25th/10th-percentile values from the same file. Two inputs have no public per-ACO source and remain
-            labeled assumptions: the practice-size mix and the non-QP Part B billing base (anchored loosely to
-            professional-services spending per beneficiary).
+            25th/10th-percentile values from the same file.
           </p>
         </div>
       </div>

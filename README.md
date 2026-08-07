@@ -8,7 +8,8 @@ score effects).
 
 The app is the **Pathway Lab** — per-measure routing across the four collection
 types, real PY2026 decile cutpoints, a CY2027 proposed-rule toggle, an exact best-mix
-search over all 1,024 assignments, and an optional clinician fee-adjustment extension.
+search over all 1,024 assignments. Clinician-level MIPS fee-adjustment modeling
+is deliberately out of scope (see the in-app Model scope note).
 Three earlier "Visual Language" components are kept in `src/` as reference (they
 typecheck but are not bundled into the site).
 

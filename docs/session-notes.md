@@ -67,10 +67,9 @@ React harness.
     couple measures through the all-or-nothing reporting incentive), surfaced
     as a one-click "Apply best mix" button.
   - Two-rail settlement: standard met by score or by deeming → sharing rate;
-    continuous score → loss scaling, clinician MIPS fee adjustments (claims-level,
-    two-year lag, non-QP only), marginal value of one point.
-  - **TIN roster fan-out**: one shared adjustment rate stated once, tiles sized
-    by each practice group's billing share (adjustable size-mix distribution).
+    continuous score → loss scaling, marginal value of one point. (Clinician
+    MIPS fee-adjustment modeling and the TIN roster fan-out were later removed
+    from the sim; see Model scope.)
   - Example-ACO scenarios **calibrated to real PY2024 MSSP results**
     (see Data sources): the middle scenario is literally the median 2024 ACO.
 
@@ -129,8 +128,8 @@ performance standard (by score or reporting incentive), sharing rate, and
 quality-scaled shared losses. Above the passing threshold in a savings year
 the marginal value of a point is $0 by design — that is the honest shape of
 the incentive, with downside (loss-year) scaling supplying the continuing
-value of points. The clinician MIPS fee-adjustment channel is an optional,
-off-by-default extension: the mechanism is real, but its boundary depends on
+value of points. The clinician MIPS fee-adjustment channel is out of scope
+and not modeled: the mechanism is real, but its boundary depends on
 per-clinician QP status and billing arrangements with no public data source.
 
 ## Known simplifications (labeled in-app as well)
@@ -138,11 +137,10 @@ per-clinician QP status and billing arrangements with no public data source.
 - Whole-decile scoring (real MIPS awards fractional points 1.0–10.9 within a
   decile) — this is why the lab's absolute scores run below the real PY2024
   median quality score of 83.1; comparisons across strategies remain valid.
-- QPS threshold, loss-scaling curve, and the clinician fee-adjustment formula
-  are illustrative stand-ins for annually published values.
-- Data-capture efficiency, Medicare-population shift, practice-size mix, and
-  the non-QP Part B billing base are labeled modeling assumptions with no
-  per-ACO public source.
+- QPS threshold and loss-scaling curve are illustrative stand-ins for
+  annually published values.
+- Data-capture efficiency and Medicare-population shift are labeled modeling
+  assumptions with no per-ACO public source.
 - Deterministic model: known deciles, no score uncertainty — which prices
   deeming's insurance/option value at zero. Natural next step: add rate
   uncertainty and show probability-of-passing per strategy.
