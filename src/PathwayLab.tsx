@@ -684,12 +684,10 @@ export default function AppPlusPathwayLab() {
                 Medicare Shared Savings Program ACOs must report five quality measures to CMS each year, and can choose
                 among several reporting methods (called "collection types") for each measure. Each method scores the
                 same measure against a different benchmark table, and some methods come with bonuses that others don't.
-                Everything here is for the <b>2026 performance year</b>: care delivered January–December 2026, reported
-                to CMS in early 2027, using the benchmark tables CMS published in January 2026.
-                This calculator uses CMS's actual published 2026 benchmark tables (the ones governing the current
-                reporting year) to show how the same clinical performance earns different scores — and different
-                shared-savings dollars — depending on the reporting method chosen. Pick an example ACO, choose
-                reporting methods, and adjust any input to see its effect.
+                Everything here is the <b>2026 performance year</b> — care delivered January–December 2026, reported
+                to CMS in early 2027, scored on the benchmark tables CMS published in January 2026 — so the same
+                clinical performance earns different scores, and different shared-savings dollars, depending on the
+                reporting method. Pick an example ACO, choose methods, adjust inputs.
               </p>
             </div>
             <div style={{ padding: "14px 20px", ...mono, fontSize: 10, color: T.inkSoft, display: "flex", flexDirection: "column", gap: 3, justifyContent: "center" }}>
@@ -726,7 +724,7 @@ export default function AppPlusPathwayLab() {
               </div>
               <p style={{ fontSize: 12, color: T.inkSoft, margin: 0, lineHeight: 1.5 }}>
                 {isCustom
-                  ? `Custom inputs — started from "${scen.name}". Every preset value is a live Step 3 control (care rates, benchmark, savings rate, track, minimum savings rate); click a preset to snap back.`
+                  ? `Custom inputs — started from "${scen.name}"; click a preset to reset.`
                   : scen.story}
               </p>
             </Panel>
@@ -781,10 +779,9 @@ export default function AppPlusPathwayLab() {
                 </button>
               </div>
               <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "8px 0 0", lineHeight: 1.5 }}>
-                These buttons set all five measures to one method. You can also choose a method for each measure
-                individually on its card below — mixing methods across measures is allowed under CMS rules, and the
-                green button applies the highest-value mix from the comparison table at the bottom (it also clears any
-                simulated reporting failures, since the search assumes all measures report successfully). eCQM =
+                These buttons set all five measures at once; each measure's card below can override it (mixing
+                methods is allowed). The green button applies the best mix from the comparison table and clears any
+                simulated reporting failures. eCQM =
                 calculated electronically from EHR data, all patients. MIPS CQM (†) = chart review / registry, all
                 patients — PY2026 is its final year under current law (CMS-1848-P proposes an extension, not final).
                 Medicare CQM = chart review, Medicare patients only. Medicare eCQM (*) = electronic, Medicare patients
@@ -794,10 +791,10 @@ export default function AppPlusPathwayLab() {
           </div>
 
           {/* labeled inputs */}
-          <Panel title="Step 3 · Adjust the inputs (every assumption is shown)" style={{ marginBottom: 12 }}>
+          <Panel title="Step 3 · Adjust the inputs" style={{ marginBottom: 12 }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 14 }}>
               <div>
-                <div style={{ fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 6, minHeight: 16 }}>UNDERLYING CARE RATES (%) — chips jump to real percentiles</div>
+                <div style={{ fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 6, minHeight: 16 }}>UNDERLYING CARE RATES (%) — chips jump to registry-reported percentiles</div>
                 {MEASURES.map((m) => (
                   <div key={m.id} style={{ marginBottom: 6 }}>
                     <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 1 }}>
@@ -811,10 +808,11 @@ export default function AppPlusPathwayLab() {
                   </div>
                 ))}
                 <p style={{ fontSize: 9.5, color: T.inkFaint, margin: "4px 0 0", lineHeight: 1.4 }}>
-                  Pins = measured-rate percentiles of real reporters, read off the benchmark ladders (001/134/236:
-                  CMS's 2026 Medicare CQM tables built from actual ACO submissions; 112/113: the 2025 MIPS CQM file —
-                  their Medicare CQM benchmarks are policy-set flat bands, not data). For 001, percentiles are of
-                  performance, so lower is better.
+                  Pins are percentiles of registry-reported (chart-review) rates, which carry no structured-capture
+                  loss — the closest public stand-in for true care rates: 001/134/236 from CMS's 2026 Medicare CQM
+                  tables (real ACO submissions, Medicare patients), 112/113 from the 2025 MIPS CQM file (all
+                  reporters). They are NOT eCQM distributions — route a measure to eCQM to see why electronic
+                  measured rates run lower. For 001, percentiles are of performance, so lower is better.
                 </p>
               </div>
               <div>
@@ -875,7 +873,7 @@ export default function AppPlusPathwayLab() {
                   PY2024 ACOs. Track sets the sharing cap (40% BASIC A–B / 50% C–E / 75% ENHANCED) and the loss rail
                   (none / flat 30% / quality-scaled). One-sided BASIC ACOs get a size-based sliding-scale minimum
                   savings rate (the MSR pins show real values by ACO size); two-sided tracks may elect lower, down
-                  to 0%. Selecting a scenario in Step 1 resets all of these; changing any makes it a custom ACO.
+                  to 0%. A Step 1 preset resets these; any change makes the ACO custom.
                 </p>
               </div>
               <div>
@@ -928,7 +926,7 @@ export default function AppPlusPathwayLab() {
               How to read a card: the ladder is the benchmark for the chosen method — ten bands worth 1 to 10 points,
               drawn to scale from CMS's real 2026 tables. The "measured" rate is where this ACO lands after the
               data-capture and population adjustments above. (To simulate a measure failing CMS's minimum reporting
-              requirements, use the checkboxes in Step 3.) 2026 quirks worth noticing: measures
+              requirements, use the checkboxes in Step 3.) 2026 quirks: measures
               112 and 113 have NO published 2026 benchmark under eCQM or MIPS CQM (dashed ladders — CMS will set the
               benchmark after submission; 2025 values shown as estimates, and the lab excludes these measures from
               both earned points and the denominator per 42 CFR 414.1367(c)(1)(i)), measure 134 under MIPS CQM is capped at 7
@@ -1059,7 +1057,7 @@ export default function AppPlusPathwayLab() {
             against real 2026 benchmarks; the quality performance standard (met by score or by the reporting
             incentive); the shared-savings rate; and quality-scaled shared losses. That is a complete model of the
             ACO-level settlement — including why the score keeps mattering after the standard is met in a loss year,
-            and why, in a savings year above the threshold, one more point is honestly worth $0. Out of
+            and why, in a savings year above the threshold, one more point is worth $0. Out of
             scope: clinician-level MIPS fee adjustments (the mechanism is real, but its boundaries depend on
             per-clinician QP status and billing arrangements with no public data source), fractional
             within-decile scoring, score uncertainty, and CAHPS/claims-measure variation.
