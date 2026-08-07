@@ -6,10 +6,11 @@ collection types score differently on real PY2026 benchmarks, and what that mean
 dollars under the two-rail settlement model (standard-met sharing rate vs. continuous
 score effects).
 
-The main app is the **Pathway Lab** — per-measure routing across the four collection
+The app is the **Pathway Lab** — per-measure routing across the four collection
 types, real PY2026 decile cutpoints, a CY2027 proposed-rule toggle, an exact best-mix
-search over all 1,024 assignments, and a TIN roster fan-out. The three
-"Visual Language" tabs preserve the evolution of the visual vocabulary it uses.
+search over all 1,024 assignments, and an optional clinician fee-adjustment extension.
+Three earlier "Visual Language" components are kept in `src/` as reference (they
+typecheck but are not bundled into the site).
 
 Scoped to the **2026 performance year**; the CY2027 PFS proposed rule (CMS-1848-P)
 is treated as a labeled contingency throughout. See
@@ -37,7 +38,6 @@ URLs, so the app works at any Pages path (`user.github.io/repo/` or a custom dom
 
 ## Layout
 
-- `src/PathwayLab.tsx` — the ACO Quality Reporting Calculator (default tab)
-- `src/VizLanguage.tsx`, `VizLanguageV2.tsx`, `VizLanguageV3.tsx` — visual-language revisions
-- `src/App.tsx` — tab shell
+- `src/PathwayLab.tsx` — the ACO Quality Reporting Calculator (the app)
+- `src/VizLanguage.tsx`, `VizLanguageV2.tsx`, `VizLanguageV3.tsx` — visual-language revisions, reference only
 - `docs/` — scoring spec, argument piece, session notes (sources & caveats)
