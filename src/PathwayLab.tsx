@@ -647,6 +647,7 @@ export default function AppPlusPathwayLab() {
     { key: "fixt", label: "FIXT", pts: mach.fixed, color: T.fixed, kind: "fixed" },
   ];
   const statusColor = mach.status === "FAILED" ? T.fail : mach.status === "ALT" ? "#D97706" : T.pass;
+  const deemLit = [mach.allFull, mach.allGates, mach.outcomeOK, mach.otherOK].filter(Boolean).length;
 
   return (
     <div style={{ minHeight: "100vh", background: T.bg, color: T.ink, ...sans }}>
@@ -906,23 +907,44 @@ export default function AppPlusPathwayLab() {
                 measure. "FIXT" (gray) is the survey and claims measures CMS scores itself. Total ÷ {mach.available} = the score.
               </p>
             </Panel>
-            <Panel title="Does the ACO pass the quality standard?" tag="determines shared savings eligibility">
-              <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 8 }}>
-                <StatusLamp on={mach.allFull} label="All five measures reported via an all-patient method (eCQM or MIPS CQM)" />
-                <StatusLamp on={mach.allGates} label="Every measure met the minimum reporting requirements" />
-                <StatusLamp on={mach.outcomeOK} label="At least one outcome measure (001, 236, or a claims outcome measure) beat the bottom 10%" />
-                <StatusLamp on={mach.otherOK} label="At least one of the remaining seven measures (incl. CAHPS + claims) reached the 40th percentile" />
+            <Panel title="Does the ACO pass the quality standard?" tag="two routes — either one passes on its own">
+              <div style={{ border: `1.5px solid ${mach.deemed ? T.pass : T.line}`, background: mach.deemed ? "rgba(22,163,74,0.06)" : "#fff", borderRadius: 4, padding: "8px 10px", marginBottom: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 10, ...mono, marginBottom: 6 }}>
+                  <span style={{ color: T.inkSoft }}>ROUTE A · AUTOMATIC PASS — the eCQM/MIPS CQM reporting incentive</span>
+                  <b style={{ color: mach.deemed ? T.pass : T.fail, whiteSpace: "nowrap" }}>{mach.deemed ? "ALL 4 MET ✓" : `${deemLit}/4 MET`}</b>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                  <StatusLamp on={mach.allFull} label="All five measures reported via an all-patient method (eCQM or MIPS CQM)" />
+                  <StatusLamp on={mach.allGates} label="Every measure met the minimum reporting requirements" />
+                  <StatusLamp on={mach.outcomeOK} label="At least one outcome measure (001, 236, or a claims outcome measure) beat the bottom 10%" />
+                  <StatusLamp on={mach.otherOK} label="At least one of the remaining seven measures (incl. CAHPS + claims) reached the 40th percentile" />
+                </div>
+                <p style={{ fontSize: 9.5, color: T.inkFaint, margin: "6px 0 0", lineHeight: 1.4 }}>
+                  Meet all four conditions and the standard is met automatically — the score below isn't consulted.
+                </p>
               </div>
-              <ThresholdStrip value={mach.q} threshold={QPS} flagLabel="passing bar 73.85 (real '26)" dimmed={mach.deemed} />
+              <div style={{ border: `1.5px solid ${mach.deemed ? T.line : mach.q >= QPS ? T.pass : T.fail}`, background: "#fff", borderRadius: 4, padding: "8px 10px", opacity: mach.deemed ? 0.55 : 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 10, ...mono, marginBottom: 4 }}>
+                  <span style={{ color: T.inkSoft }}>ROUTE B · PASS BY SCORE — beat the national 40th percentile</span>
+                  <b style={{ color: mach.deemed ? T.inkFaint : mach.q >= QPS ? T.pass : T.fail, whiteSpace: "nowrap" }}>
+                    {mach.deemed ? "NOT CONSULTED" : `${mach.q.toFixed(1)} ${mach.q >= QPS ? "≥" : "<"} ${QPS}`}
+                  </b>
+                </div>
+                <ThresholdStrip value={mach.q} threshold={QPS} flagLabel="passing bar 73.85 (real '26)" dimmed={mach.deemed} />
+                {!mach.deemed && mach.q < QPS && (
+                  <p style={{ fontSize: 9.5, color: T.inkFaint, margin: "4px 0 0", lineHeight: 1.4 }}>
+                    Below the bar with no automatic pass: if an outcome measure still beat the bottom 10%, the ACO
+                    lands on the alternative standard — PARTIAL, sharing rate scaled by the score. Otherwise it fails.
+                  </p>
+                )}
+              </div>
               <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <WireIcon binary color={statusColor} />
                 <span style={{ fontSize: 13, fontWeight: 700, color: statusColor, ...mono }}>
                   {mach.status === "DEEMED" ? "PASSES (automatic)" : mach.status === "MET" ? "PASSES (by score)" : mach.status === "ALT" ? "PARTIAL (reduced savings)" : "FAILS"}
                 </span>
                 <span style={{ fontSize: 10, color: T.inkFaint }}>
-                  {mach.deemed
-                    ? "All four lights are on, so CMS counts the standard as met automatically — the score itself isn't consulted for this decision (the chart is grayed out)."
-                    : "The score must beat the flag on the chart above (the 40th percentile of all quality scores nationally)."}
+                  {mach.status === "DEEMED" ? "via Route A — the reporting incentive" : mach.status === "MET" ? "via Route B — score above the bar" : mach.status === "ALT" ? "neither route passed; the outcome floor preserves scaled sharing" : "neither route passed, and no outcome measure cleared the floor"}
                 </span>
               </div>
               <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 5, fontSize: 11, ...mono, color: T.inkSoft }}>
