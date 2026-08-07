@@ -5,7 +5,7 @@ Under current rules as amended by the CY 2027 PFS proposed rule (CMS-1848-P), MS
 | | **All-payer / all-patient** | **Attributed beneficiaries only** |
 |---|---|---|
 | **eCQM pipeline** (CEHRT, end-to-end electronic) | **eCQM** | **Medicare eCQM** *(proposed, PY 2027+)* |
-| **CQM pipeline** (registry / claims / abstraction) | **MIPS CQM** *(sunset reversed, extended indefinitely)* | **Medicare CQM** |
+| **CQM pipeline** (registry / claims / abstraction) | **MIPS CQM** *(sunsets after PY 2026 under current law; CMS-1848-P proposes extension to PY 2027+ with anticipated sunset PY 2030 — proposed, not final)* | **Medicare CQM** |
 
 ## Axis effects
 

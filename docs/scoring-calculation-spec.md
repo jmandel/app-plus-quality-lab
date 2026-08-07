@@ -85,7 +85,7 @@ quality_percent = (Σ achievement_points + COA_points) / (Σ available_points) �
 Three tests, evaluated in priority order:
 
 1. **Standard QPS:** `quality_percent` ≥ the 40th-percentile MIPS quality score (a threshold CMS publishes per PY). Consumes the continuous rail's output — this is one of the two places the rails touch.
-2. **Deeming bypass (the reporting incentive):** IF all five reportable measures were routed to **eCQM or MIPS CQM** (all-payer column) AND each met data completeness AND the ACO scored ≥ 10th percentile on ≥ 1 designated outcome measure (the annually-flagged outcome measures in the set — #001 and #236 among the reportables) THEN **deemed to meet QPS regardless of quality_percent**. `[PROPOSED]` extended to PY 2027+ alongside the MIPS CQM extension. Note the bypass reads *per-measure* facts (routing, gates, one measure's decile standing), not the aggregate score — COA points cannot help you qualify for deeming.
+2. **Deeming bypass (the reporting incentive):** IF all five reportable measures were routed to **eCQM or MIPS CQM** (all-payer column) AND each met data completeness AND the ACO scored ≥ 10th percentile on ≥ 1 designated outcome measure (#001, #236, or an admin-claims outcome measure — the memo's Table 1 flags 479/484 as outcome for this purpose) AND ≥ 40th percentile on ≥ 1 of the **remaining seven** measures in the eight-measure set (CAHPS and claims count) THEN **deemed to meet QPS regardless of quality_percent** (42 CFR 425.512(a)(5)(i)(B)(2) — a four-part conjunction). `[PROPOSED]` extended to PY 2027+ alongside the MIPS CQM extension, but narrowed to **eCQMs only** (425.512(a)(5)(i)(C)(2)). Note the bypass reads *per-measure* facts (routing, gates, per-measure decile standings), not the aggregate score — COA points cannot help you qualify for deeming.
 3. **Alternative QPS:** reported per requirements AND ≥ 10th percentile on ≥ 1 outcome measure → eligible for **scaled** (reduced) sharing, with the scale factor consuming `quality_percent` — the second rail-touch point.
 4. Else: **failed** — no shared savings; maximum shared losses where applicable.
 
@@ -111,7 +111,7 @@ This is where newcomers get lost, because different consumers read different rai
 
 For an ACO with all five measures routed to **eCQM**, passing all gates:
 
-1. Deeming bypass is **live** (given one outcome measure ≥ 10th percentile) → max sharing rate secured *independent of score*.
+1. Deeming bypass is **live** (given one outcome measure ≥ 10th percentile AND one of the remaining seven measures ≥ 40th percentile) → max sharing rate secured *independent of score*.
 2. COA adds up to +5 to the continuous rail → does **not** affect (1), but raises `quality_percent`, which (a) reduces ENHANCED loss exposure, (b) raises non-QP clinicians' fee adjustments, (c) provides fallback margin toward standard QPS if deeming ever breaks (e.g., one measure's completeness failure), and (d) improves the public number.
 3. Route even one measure to Medicare CQM / Medicare eCQM → deeming condition breaks entirely (column violation) → the ACO falls back to the standard-QPS comparator, where `quality_percent` (including any surviving COA points) suddenly bears full financial weight. **The bonus structures are cell-dependent, but the *consequence* of losing them is score-dependent — the rails swap importance.**
 

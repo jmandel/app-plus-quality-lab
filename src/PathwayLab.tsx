@@ -4,12 +4,12 @@ import type * as React from "react";
 /* ============================================================
    APP PLUS PATHWAY LAB — VL-04
    A standalone lab on the visual language (rev 3), now wired to
-   REAL PY2025 QPP benchmark decile cutpoints (qpp.cms.gov
+   REAL PY2026 QPP benchmark decile cutpoints (qpp.cms.gov
    benchmarks file) for the five APP Plus reportable measures.
 
    Core realism:
    - Each measure × collection type has its actual cutpoint table
-     (historical = irregular; Medicare CQM = flat 10-pt bands;
+     (historical = irregular; flat-percentage = uniform bands;
      134 MIPS CQM is topped-out with a 7-point cap — all real).
    - The SAME underlying care rate produces DIFFERENT measured
      rates per pathway (eCQM capture gaps; Medicare-only
@@ -31,11 +31,12 @@ interface CollectionType {
   electronic: boolean;
   fullPop: boolean;
   proposed?: boolean;
+  sunset?: boolean;
 }
 const CT: Record<PathwayId, CollectionType> = {
   ecqm:    { label: "eCQM",          color: "#2563EB", electronic: true,  fullPop: true  },
   medecqm: { label: "Medicare eCQM", color: "#0D9488", electronic: true,  fullPop: false, proposed: true },
-  mipscqm: { label: "MIPS CQM",      color: "#D97706", electronic: false, fullPop: true  },
+  mipscqm: { label: "MIPS CQM",      color: "#D97706", electronic: false, fullPop: true,  sunset: true },
   medcqm:  { label: "Medicare CQM",  color: "#A21CAF", electronic: false, fullPop: false },
 };
 const PATHWAYS: PathwayId[] = ["ecqm", "medecqm", "mipscqm", "medcqm"];
@@ -55,12 +56,15 @@ interface Bench {
    direct: floors[i] = min rate for decile i+1. inverse: caps[i] = max rate for decile i+1.
    null = decile doesn't exist. cap = scoring cap. est = no PY2026 benchmark exists for
    this cell (CMS sets a performance-period benchmark AFTER submission); PY2025 cutpoints
-   are shown as an estimate only. ---- */
+   are shown as an estimate only.
+   NOTE: the QPP CSV's "Benchmark Type" column only ever reads Historical or "--", never
+   Flat — flat-percentage cells (001/236 MIPS CQM, per 42 CFR 414.1380(b)(1)(ii)(C)) must
+   be identified by their ladder pattern, not the CSV label. ---- */
 const FLAT = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90];
 const BENCH: Record<MeasureId, { inverse: boolean } & Record<PathwayId, Bench>> = {
   "001": { inverse: true,
     ecqm:    { caps: [99.49, 93.98, 71.68, 49.53, 36.72, 29.53, 24.85, 20.86, 17.18, 12.50], kind: "historical", avg: 40.91 },
-    mipscqm: { caps: [99, 90, 80, 70, 60, 50, 40, 30, 20, 10], kind: "historical", avg: 23.12 },
+    mipscqm: { caps: [99, 90, 80, 70, 60, 50, 40, 30, 20, 10], kind: "flat percentage", avg: 23.12 },
     medcqm:  { caps: [80.94, 49.19, 38.28, 29.76, 25.93, 22.27, 18.93, 14.33, 10.14, 7.03], kind: "historical (real ACO data)", avg: 25.78 },
     medecqm: { caps: [99, 90, 80, 70, 60, 50, 40, 30, 20, 10], kind: "flat*" },
   },
@@ -72,7 +76,7 @@ const BENCH: Record<MeasureId, { inverse: boolean } & Record<PathwayId, Bench>> 
   },
   "236": { inverse: false,
     ecqm:    { floors: [4.76, 45.28, 55.56, 61.54, 65.61, 68.98, 72.00, 75.00, 78.70, 84.04], kind: "historical", avg: 66.06 },
-    mipscqm: { floors: FLAT, kind: "historical", avg: 68.71 },
+    mipscqm: { floors: FLAT, kind: "flat percentage", avg: 68.71 },
     medcqm:  { floors: [13.68, 44.87, 62.33, 68.17, 70.15, 72.54, 74.09, 74.70, 76.42, 82.81], kind: "historical (real ACO data)", avg: 67.87 },
     medecqm: { floors: FLAT, kind: "flat*" },
   },
@@ -115,7 +119,18 @@ const MEASURES: Measure[] = [
   { id: "112", name: "Breast cancer screening", outcome: false },
   { id: "113", name: "Colorectal cancer screening", outcome: false },
 ];
-const AVAILABLE = 80, QPS = 55, MAX_SHARE = 75, POP_ADJ = 3;
+const AVAILABLE = 80, QPS = 55, POP_ADJ = 3;
+
+type TrackKey = "enhanced" | "basicA" | "basicB" | "basicCDE";
+// Sharing caps and loss rails per 42 CFR 425.605(d) (BASIC) and 425.610(d), (f)(4) (ENHANCED):
+// one-sided A/B share up to 40% with no shared losses; C–E share up to 50% with a fixed 30%
+// loss rate that ignores quality; only ENHANCED (75%) scales losses with the quality score.
+const TRACKS: Record<TrackKey, { label: string; maxShare: number; loss: "none" | "flat30" | "scaled" }> = {
+  enhanced: { label: "ENHANCED", maxShare: 75, loss: "scaled" },
+  basicA:   { label: "BASIC Level A (one-sided)", maxShare: 40, loss: "none" },
+  basicB:   { label: "BASIC Level B (one-sided)", maxShare: 40, loss: "none" },
+  basicCDE: { label: "BASIC Level C–E", maxShare: 50, loss: "flat30" },
+};
 
 type Routing = Record<MeasureId, PathwayId>;
 type Rates = Record<MeasureId, number>;
@@ -134,29 +149,31 @@ interface Scenario {
   fixedPts: FixedPts;
   benchmarkM: number;
   grossPct: number;
+  track: TrackKey;
+  msr: number;
 }
 
 const SCENARIOS: Record<ScenarioKey, Scenario> = {
   strong: {
     key: "strong", name: "Integrated high performer",
-    story: "An integrated health system ACO: 24,000 assigned Medicare patients (75th percentile of real 2024 ACOs), a few large consolidated practice groups, an experienced quality team, and spending 7.0% under its cost benchmark — a 75th-percentile 2024 financial result. It's in the ENHANCED track (an Advanced APM), so nearly all its clinicians are Qualified APM Participants — exempt from MIPS. Its clinical performance is strong on every measure; the open question is which reporting method turns that performance into the most points and dollars.",
+    story: "An integrated health system ACO: 24,000 assigned Medicare patients (75th percentile of real 2024 ACOs), a few large consolidated practice groups, an experienced quality team, and spending 7.0% under its cost benchmark — a 75th-percentile 2024 financial result. It's in the ENHANCED track: two-sided risk, savings shared at up to 75%, and loss repayment scaled by the quality score. Its clinical performance is strong on every measure; the open question is which reporting method turns that performance into the most points and dollars.",
     rates: { "001": 17, "134": 76, "236": 79, "112": 77, "113": 73 },
     fixedPts: { cahps: 7, claims1: 6, claims2: 7 },
-    benchmarkM: 330, grossPct: 7.0,
+    benchmarkM: 330, grossPct: 7.0, track: "enhanced", msr: 0,
   },
   middle: {
     key: "middle", name: "Middle-of-the-road regional",
-    story: "A regional ACO built to match the median real 2024 ACO: 13,000 assigned patients, 19 practice groups on four different electronic health records, spending 4.2% under benchmark. It's in BASIC Level B (not an Advanced APM), so ALL of its clinicians remain subject to MIPS. Average clinical performance. Note how measure 134 (depression screening) scores very differently by method — a 64% rate lands low on the MIPS CQM ladder (practices reporting that way average 86%) but mid-to-high on the electronic ladder — while measure 236 (blood pressure) runs the opposite direction.",
+    story: "A regional ACO built to match the median real 2024 ACO: 13,000 assigned patients, 19 practice groups on four different electronic health records, spending 4.2% under benchmark. It's in BASIC Level B: one-sided (no loss repayment), savings shared at up to 40% once it beats its ~2.8% minimum savings rate. Average clinical performance. Note how measure 134 (depression screening) scores very differently by method — a 64% rate lands low on the MIPS CQM ladder (practices reporting that way average 86%) but mid-to-high on the electronic ladder — while measure 236 (blood pressure) runs the opposite direction.",
     rates: { "001": 24, "134": 64, "236": 72, "112": 69, "113": 66 },
     fixedPts: { cahps: 6, claims1: 5, claims2: 6 },
-    benchmarkM: 177, grossPct: 4.2,
+    benchmarkM: 177, grossPct: 4.2, track: "basicB", msr: 2.8,
   },
   safetynet: {
     key: "safetynet", name: "Safety-net / rural network",
-    story: "A safety-net ACO: 8,000 assigned patients (25th percentile) across 24 small independent practices, and it spent 0.5% more than its cost benchmark — a bottom-decile 2024 financial result, so it may owe money back to Medicare (in BASIC Level A, actual loss repayment wouldn't apply — treat the loss figure as illustrating a two-sided variant). Its clinicians are all MIPS-subject. In this situation the quality score matters even more, because a higher score reduces how much of the loss the ACO must repay.",
+    story: "A safety-net ACO: 8,000 assigned patients (25th percentile) across 24 small independent practices, and it spent 0.5% more than its cost benchmark — a bottom-decile 2024 financial result. Its one-sided BASIC Level A track means it repays nothing back — but it also shares nothing until savings beat its ~3.2% minimum savings rate, so the quality standard gates only potential upside here. (A two-sided track would repay: a flat 30% in BASIC C–E regardless of quality; quality-scaled in ENHANCED.)",
     rates: { "001": 33, "134": 52, "236": 63, "112": 56, "113": 49 },
     fixedPts: { cahps: 5, claims1: 4, claims2: 5 },
-    benchmarkM: 95, grossPct: -0.5,
+    benchmarkM: 95, grossPct: -0.5, track: "basicA", msr: 3.2,
   },
 };
 
@@ -200,6 +217,7 @@ interface MeasureRow extends Measure {
   pts: number;
   coa: number;
   capped: boolean;
+  excluded: boolean;
   bench: Bench;
   inverse: boolean;
 }
@@ -210,6 +228,7 @@ interface Machine {
   fixed: number;
   total: number;
   q: number;
+  available: number;
   allFull: boolean;
   allGates: boolean;
   outcomeOK: boolean;
@@ -223,32 +242,43 @@ function runMachine(routing: Routing, rates: Rates, gates: Gates, capture: numbe
     const meas = measuredRate(m.id, routing[m.id], rates[m.id], capture);
     const b = getBench(m.id, routing[m.id], proposedFlat);
     const dec = decileWith(b, BENCH[m.id].inverse, meas);
-    const pts = gates[m.id] ? Math.min(dec, b.cap || 10) : 0;
+    // A submitted measure with no benchmark is excluded from BOTH earned points and the
+    // available-points denominator (42 CFR 414.1367(c)(1)(i)); its estimate ladder stays
+    // visible for context but scores nothing.
+    const excluded = !!b.est;
+    const pts = !excluded && gates[m.id] ? Math.min(dec, b.cap || 10) : 0;
     const coa = routing[m.id] === "ecqm" && gates[m.id] && pts < 10 ? 1 : 0;
-    return { ...m, pathway: routing[m.id], underlying: rates[m.id], measured: meas, decile: dec, pts, coa, capped: !!b.cap && dec > b.cap, bench: b, inverse: BENCH[m.id].inverse };
+    return { ...m, pathway: routing[m.id], underlying: rates[m.id], measured: meas, decile: dec, pts, coa, capped: !!b.cap && dec > b.cap, excluded, bench: b, inverse: BENCH[m.id].inverse };
   });
+  const available = AVAILABLE - 10 * rows.filter((r) => r.excluded).length;
   const earned = rows.reduce((s, r) => s + r.pts, 0);
-  const coa = Math.min(rows.reduce((s, r) => s + r.coa, 0), AVAILABLE * 0.1);
+  const coa = Math.min(rows.reduce((s, r) => s + r.coa, 0), available * 0.1);
   const fixed = fixedPts.cahps + fixedPts.claims1 + fixedPts.claims2;
-  const total = Math.min(earned + coa + fixed, AVAILABLE);
-  const q = (total / AVAILABLE) * 100;
+  const total = Math.min(earned + coa + fixed, available);
+  const q = (total / available) * 100;
   const allFull = rows.every((r) => CT[r.pathway].fullPop);
   const allGates = rows.every((r) => gates[r.id]);
-  const outcomeOK = rows.some((r) => r.outcome && gates[r.id] && r.decile >= 2);
-  // Second incentive condition (CY2025 final rule): at least one measure OTHER than the
-  // qualifying outcome measure must reach the 40th percentile (decile 5+). The claims
-  // outcome measures can also satisfy the outcome condition in the real rule; this model
-  // checks 001/236 only (conservative).
-  const otherOK = rows.some((r) => !(r.outcome && r.decile >= 2) && r.decile >= 5 && r.pts > 0)
+  // Outcome condition: 001, 236, or either administrative-claims outcome measure (479/484,
+  // modeled as fixed points) at/above the 10th percentile — claims outcome measures count for
+  // both the reporting incentive and the alternative QPS (CMS PY2026 QPS memo, Table 1).
+  const outcomeOK = rows.some((r) => r.outcome && gates[r.id] && r.decile >= 2)
+    || fixedPts.claims1 >= 2 || fixedPts.claims2 >= 2;
+  // Second incentive condition (42 CFR 425.512(a)(5)(i)(B)(2)): >=40th percentile on at least
+  // one of the remaining seven measures of the eight-measure set — CAHPS and the claims
+  // measures count, via their fixed decile-equivalent points.
+  const otherOK = [fixedPts.cahps, fixedPts.claims1, fixedPts.claims2].some((p) => p >= 5)
+    || rows.some((r) => !(r.outcome && r.decile >= 2) && r.decile >= 5 && r.pts > 0)
     || rows.filter((r) => r.outcome && r.decile >= 2).length >= 2 && rows.some((r) => r.decile >= 5 && r.pts > 0);
   const deemed = allFull && allGates && outcomeOK && otherOK;
   const status = deemed ? "DEEMED" : q >= QPS ? "MET" : outcomeOK ? "ALT" : "FAILED";
-  return { rows, earned, coa, fixed, total, q, allFull, allGates, outcomeOK, otherOK, deemed, status };
+  return { rows, earned, coa, fixed, total, q, available, allFull, allGates, outcomeOK, otherOK, deemed, status };
 }
 
 interface FinInputs {
   grossPct: number;
   benchmarkM: number;
+  track: TrackKey;
+  msr: number;
 }
 interface Settlement {
   sharePct: number;
@@ -260,10 +290,14 @@ interface Settlement {
 }
 
 function settle(mach: Machine, fin: FinInputs): Settlement {
-  const sharePct = mach.status === "DEEMED" || mach.status === "MET" ? MAX_SHARE : mach.status === "ALT" ? MAX_SHARE * (mach.q / 100) : 0;
-  const lossPct = mach.status === "FAILED" ? 75 : Math.min(75, Math.max(40, 75 - 0.45 * mach.q));
+  const tr = TRACKS[fin.track];
+  const sharePct = mach.status === "DEEMED" || mach.status === "MET" ? tr.maxShare : mach.status === "ALT" ? tr.maxShare * (mach.q / 100) : 0;
+  // ENHANCED loss scaling is 1 − 0.75 × score, clamped to [40, 75] (42 CFR 425.610(f)(4)),
+  // applied here to the lab's compressed q scale.
+  const lossPct = tr.loss === "none" ? 0 : tr.loss === "flat30" ? 30 : Math.min(75, Math.max(40, 100 - 0.75 * mach.q));
   const gross = (fin.grossPct / 100) * fin.benchmarkM;
-  const savings$ = gross > 0 ? (sharePct / 100) * gross : 0;
+  // Shared savings require beating the ACO's minimum savings rate (42 CFR 425.605(a)(6)).
+  const savings$ = gross > 0 && fin.grossPct >= fin.msr ? (sharePct / 100) * gross : 0;
   const losses$ = gross < 0 ? (lossPct / 100) * gross : 0;
   const net$ = savings$ + losses$;
   return { sharePct, lossPct, gross, savings$, losses$, net$ };
@@ -400,7 +434,7 @@ function Station({ row, gate, onRoute }: { row: MeasureRow; gate: boolean; onRou
               <PopGlyph full={CT[k].fullPop} color={row.pathway === k ? "#fff" : CT[k].color} size={11} />
               <PipeGlyph electronic={CT[k].electronic} color={row.pathway === k ? "#fff" : CT[k].color} width={20} />
             </span>
-            <span style={{ textAlign: "left" }}>{CT[k].label.replace("Medicare ", "M-")}{CT[k].proposed ? "*" : ""}</span>
+            <span style={{ textAlign: "left" }}>{CT[k].label.replace("Medicare ", "M-")}{CT[k].proposed ? "*" : ""}{CT[k].sunset ? "†" : ""}</span>
           </button>
         ))}
       </div>
@@ -411,7 +445,9 @@ function Station({ row, gate, onRoute }: { row: MeasureRow; gate: boolean; onRou
           <span style={line}>care rate: <b style={{ color: T.ink }}>{row.underlying}%</b></span>
           <span style={line}>measured ({ct.label.replace("Medicare ", "M-")}): <b style={{ color: ct.color }}>{row.measured.toFixed(1)}%</b></span>
           <span style={line}>ladder: {row.bench.est ? "2025 est. — no '26 bench" : row.bench.kind}{row.bench.topped ? " · TOPPED" : ""}</span>
-          <span style={line}>decile <b style={{ color: T.ink }}>{row.decile}</b>{row.capped ? ` → capped @7` : ""} = <b style={{ color: gate ? T.ink : T.fail }}>{row.pts} pts</b></span>
+          <span style={line}>{row.excluded
+            ? <>est. decile <b style={{ color: T.ink }}>{row.decile}</b> — <b style={{ color: T.fail }}>excluded from score</b></>
+            : <>decile <b style={{ color: T.ink }}>{row.decile}</b>{row.capped ? ` → capped @7` : ""} = <b style={{ color: gate ? T.ink : T.fail }}>{row.pts} pts</b></>}</span>
           {!gate && <span style={{ ...line, color: T.fail, fontWeight: 700 }}>REPORTING FAILURE — scored 0</span>}
         </div>
       </div>
@@ -518,37 +554,40 @@ export default function AppPlusPathwayLab() {
   const allSame = PATHWAYS.find((k) => MEASURES.every((m) => routing[m.id] === k));
 
   const mach = useMemo(() => runMachine(routing, rates, gates, capture, scen.fixedPts, proposedFlat), [routing, rates, gates, capture, scen, proposedFlat]);
-  const fin = useMemo(() => settle(mach, { grossPct, benchmarkM }), [mach, grossPct, benchmarkM]);
+  const fin = useMemo(() => settle(mach, { grossPct, benchmarkM, track: scen.track, msr: scen.msr }), [mach, grossPct, benchmarkM, scen]);
   const marginal = useMemo(() => {
-    const plus = { ...mach, total: Math.min(mach.total + 1, AVAILABLE), q: (Math.min(mach.total + 1, AVAILABLE) / AVAILABLE) * 100 };
+    const plus = { ...mach, total: Math.min(mach.total + 1, mach.available), q: (Math.min(mach.total + 1, mach.available) / mach.available) * 100 };
     plus.status = plus.deemed ? "DEEMED" : plus.q >= QPS ? "MET" : plus.outcomeOK ? "ALT" : "FAILED";
-    const base$ = settle(mach, { grossPct, benchmarkM }).net$;
-    const plus$ = settle(plus, { grossPct, benchmarkM }).net$;
+    const base$ = settle(mach, { grossPct, benchmarkM, track: scen.track, msr: scen.msr }).net$;
+    const plus$ = settle(plus, { grossPct, benchmarkM, track: scen.track, msr: scen.msr }).net$;
     return (plus$ - base$) * 1000;
-  }, [mach, grossPct, benchmarkM]);
+  }, [mach, grossPct, benchmarkM, scen]);
 
   // Comparison rows: four uniform strategies, the current configuration, and the exact best
   // mixed assignment. Among eCQM/MIPS CQM only, per-measure greedy is provably optimal
   // (scoring is separable there — the automatic-pass condition holds for every such mix and
   // COA is per-measure). Attributed-column methods break separability only through the
-  // automatic-pass AND-condition, so we simply check all 4^5 = 1,024 assignments exactly.
+  // automatic-pass AND-condition, so we simply check every legal assignment exactly.
+  // Medicare eCQM is excluded from the search — it does not exist for PY2026 (proposed for
+  // 2027) — leaving 3^5 = 243 assignments; its uniform row stays visible as a preview.
   const comparison = useMemo(() => {
     const ALLPASS: Gates = { "001": true, "134": true, "236": true, "112": true, "113": true };
-    const finP = { grossPct, benchmarkM };
+    const finP = { grossPct, benchmarkM, track: scen.track, msr: scen.msr };
     const evalR = (r: Routing, g: Gates) => { const m = runMachine(r, rates, g, capture, scen.fixedPts, proposedFlat); return { m, f: settle(m, finP) }; };
     const rows: ComparisonRow[] = PATHWAYS.map((k) => ({
-      key: k, label: `All ${CT[k].label}${CT[k].proposed ? "*" : ""}`, labelColor: CT[k].color,
+      key: k, label: `All ${CT[k].label}${CT[k].proposed ? "*" : ""}${CT[k].sunset ? "†" : ""}`, labelColor: CT[k].color,
       showMethods: false, ...evalR({ "001": k, "134": k, "236": k, "112": k, "113": k }, ALLPASS),
     }));
     let best: { m: Machine; f: Settlement } | null = null;
     for (let n = 0; n < 1024; n++) {
       let x = n; const r = {} as Routing;
       MEASURES.forEach((mm) => { r[mm.id] = PATHWAYS[x % 4]; x = Math.floor(x / 4); });
+      if (MEASURES.some((mm) => r[mm.id] === "medecqm")) continue;
       const e = evalR(r, ALLPASS);
       if (!best || e.f.net$ > best.f.net$ + 1e-9 || (Math.abs(e.f.net$ - best.f.net$) < 1e-9 && e.m.q > best.m.q)) best = e;
     }
     rows.push({ key: "cfg", label: "As configured above", labelColor: T.ink, showMethods: true, ...evalR(routing, gates) });
-    rows.push({ key: "best", label: "Best mix (all 1,024 checked)", labelColor: T.money, showMethods: true, ...best! });
+    rows.push({ key: "best", label: "Best mix (all 243 PY26-legal checked)", labelColor: T.money, showMethods: true, ...best! });
     return rows;
   }, [rates, capture, grossPct, benchmarkM, scen, proposedFlat, routing, gates]);
 
@@ -607,7 +646,7 @@ export default function AppPlusPathwayLab() {
 
           {/* scenario + master switch */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))", gap: 12, marginBottom: 12 }}>
-            <Panel title="Step 1 · Pick an example ACO" tag={`$${benchmarkM}M cost benchmark`}>
+            <Panel title="Step 1 · Pick an example ACO" tag={`$${benchmarkM}M cost benchmark · ${TRACKS[scen.track].label}`}>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
                 {Object.values(SCENARIOS).map((s) => (
                   <button key={s.key} onClick={() => load(s.key)} style={{
@@ -633,7 +672,7 @@ export default function AppPlusPathwayLab() {
                       <PopGlyph full={CT[k].fullPop} color={allSame === k ? "#fff" : CT[k].color} size={14} />
                       <PipeGlyph electronic={CT[k].electronic} color={allSame === k ? "#fff" : CT[k].color} width={24} />
                     </span>
-                    <span style={{ textAlign: "left" }}>All {CT[k].label}{CT[k].proposed ? "*" : ""}</span>
+                    <span style={{ textAlign: "left" }}>All {CT[k].label}{CT[k].proposed ? "*" : ""}{CT[k].sunset ? "†" : ""}</span>
                   </button>
                 ))}
                 <button onClick={() => { setRouting({ ...bestRouting }); setGates({ "001": true, "134": true, "236": true, "112": true, "113": true }); }}
@@ -674,7 +713,8 @@ export default function AppPlusPathwayLab() {
                 individually on its card below — mixing methods across measures is allowed under CMS rules, and the
                 green button applies the highest-value mix from the comparison table at the bottom (it also clears any
                 simulated reporting failures, since the search assumes all measures report successfully). eCQM =
-                calculated electronically from EHR data, all patients. MIPS CQM = chart review / registry, all patients.
+                calculated electronically from EHR data, all patients. MIPS CQM (†) = chart review / registry, all
+                patients — PY2026 is its final year under current law (CMS-1848-P proposes an extension, not final).
                 Medicare CQM = chart review, Medicare patients only. Medicare eCQM (*) = electronic, Medicare patients
                 only — proposed to begin in 2027, not yet final.
               </p>
@@ -770,7 +810,8 @@ export default function AppPlusPathwayLab() {
               data-capture and population adjustments above. (To simulate a measure failing CMS's minimum reporting
               requirements, use the checkboxes in Step 3.) 2026 quirks worth noticing: measures
               112 and 113 have NO published 2026 benchmark under eCQM or MIPS CQM (dashed ladders — CMS will set the
-              benchmark after submission; 2025 values shown as estimates), measure 134 under MIPS CQM is capped at 7
+              benchmark after submission; 2025 values shown as estimates, and the lab excludes these measures from
+              both earned points and the denominator per 42 CFR 414.1367(c)(1)(i)), measure 134 under MIPS CQM is capped at 7
               points (dashed red line), measure 001 counts a bad outcome so lower rates score higher, and the Medicare
               CQM ladders for 001, 134, and 236 are now built from real ACO submissions — far steeper in the middle
               than the old flat bands, unless the pending proposed rule (toggle above) restores flat scoring.
@@ -783,15 +824,15 @@ export default function AppPlusPathwayLab() {
               <Waterfall steps={steps} total={mach.total} />
               <p style={{ fontSize: 10, color: T.inkFaint, margin: "6px 0 0" }}>
                 Each bar adds one measure's points. "COA" (striped) is a bonus point per electronically-reported
-                measure. "FIXT" (gray) is the survey and claims measures CMS scores itself. Total ÷ 80 = the score.
+                measure. "FIXT" (gray) is the survey and claims measures CMS scores itself. Total ÷ {mach.available} = the score.
               </p>
             </Panel>
             <Panel title="Does the ACO pass the quality standard?" tag="determines shared savings eligibility">
               <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 8 }}>
                 <StatusLamp on={mach.allFull} label="All five measures reported via an all-patient method (eCQM or MIPS CQM)" />
                 <StatusLamp on={mach.allGates} label="Every measure met the minimum reporting requirements" />
-                <StatusLamp on={mach.outcomeOK} label="At least one outcome measure (001 or 236) beat the bottom 10%" />
-                <StatusLamp on={mach.otherOK} label="At least one other measure reached the 40th percentile (decile 5+)" />
+                <StatusLamp on={mach.outcomeOK} label="At least one outcome measure (001, 236, or a claims outcome measure) beat the bottom 10%" />
+                <StatusLamp on={mach.otherOK} label="At least one of the remaining seven measures (incl. CAHPS + claims) reached the 40th percentile" />
               </div>
               <ThresholdStrip value={mach.q} threshold={QPS} flagLabel="40th pctile (illus. 55)" dimmed={mach.deemed} />
               <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -801,13 +842,18 @@ export default function AppPlusPathwayLab() {
                 </span>
                 <span style={{ fontSize: 10, color: T.inkFaint }}>
                   {mach.deemed
-                    ? "All three lights are on, so CMS counts the standard as met automatically — the score itself isn't consulted for this decision (the chart is grayed out)."
+                    ? "All four lights are on, so CMS counts the standard as met automatically — the score itself isn't consulted for this decision (the chart is grayed out)."
                     : "The score must beat the flag on the chart above (the 40th percentile of all quality scores nationally)."}
                 </span>
               </div>
               <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 5, fontSize: 11, ...mono, color: T.inkSoft }}>
-                <span>ACO keeps <b style={{ color: T.money }}>{fin.sharePct.toFixed(0)}%</b> of any savings → <b style={{ color: T.money }}>{fmt$(fin.savings$)}</b></span>
-                <span>ACO repays <b style={{ color: T.debt }}>{fin.lossPct.toFixed(0)}%</b> of any overspend → <b style={{ color: T.debt }}>{fmt$(fin.losses$)}</b> (higher quality score = smaller repayment)</span>
+                <span>{TRACKS[scen.track].label} track — sharing capped at {TRACKS[scen.track].maxShare}%{scen.msr > 0 ? `, savings shared only past the ${scen.msr.toFixed(1)}% minimum savings rate` : ""}</span>
+                <span>ACO keeps <b style={{ color: T.money }}>{fin.sharePct.toFixed(0)}%</b> of any savings → <b style={{ color: T.money }}>{fmt$(fin.savings$)}</b>{grossPct > 0 && grossPct < scen.msr ? " — under the minimum savings rate, nothing is shared" : ""}</span>
+                {TRACKS[scen.track].loss === "none"
+                  ? <span>one-sided track: <b style={{ color: T.money }}>no shared losses</b></span>
+                  : TRACKS[scen.track].loss === "flat30"
+                    ? <span>ACO repays a flat <b style={{ color: T.debt }}>30%</b> of any overspend → <b style={{ color: T.debt }}>{fmt$(fin.losses$)}</b> (fixed — does not move with quality)</span>
+                    : <span>ACO repays <b style={{ color: T.debt }}>{fin.lossPct.toFixed(0)}%</b> of any overspend → <b style={{ color: T.debt }}>{fmt$(fin.losses$)}</b> (higher quality score = smaller repayment)</span>}
                 <span style={{ borderTop: `1px solid ${T.line}`, paddingTop: 5 }}>combined result: <b style={{ color: fin.net$ >= 0 ? T.money : T.debt, fontSize: 14 }}>{fmt$(fin.net$)}</b> · one extra quality point is currently worth <b style={{ color: marginal >= 0 ? T.money : T.debt }}>{marginal >= 0 ? "+" : ""}${Math.abs(marginal) >= 1000 ? (marginal / 1000).toFixed(2) + "M" : marginal.toFixed(0) + "k"}</b></span>
               </div>
             </Panel>
@@ -851,8 +897,9 @@ export default function AppPlusPathwayLab() {
               requirements. "Best mix" is exact, not heuristic: when mixing only the two all-patient methods, the best
               choice can be made measure-by-measure (the automatic-pass rule survives any such mix and the electronic
               bonus is per-measure), but Medicare-only methods make the automatic-pass rule an all-or-nothing question
-              across measures — so the calculator simply evaluates all 1,024 possible assignments and shows the one
-              with the highest combined dollars. Differences across rows come from the benchmark tables, electronic
+              across measures — so the calculator simply evaluates all 243 assignments available for 2026 and shows
+              the one with the highest combined dollars (Medicare eCQM appears as a preview row but is excluded from
+              the search — it doesn't exist until 2027, and only if finalized). Differences across rows come from the benchmark tables, electronic
               data-capture losses, the 7-point cap on measure 134 under MIPS CQM (marked ᶜ), and which methods carry
               the automatic-pass rule and the electronic reporting bonus.
             </p>
@@ -876,13 +923,17 @@ export default function AppPlusPathwayLab() {
             built from ACO submissions; the toggle applies the pending July 2026 proposed rule that would replace them
             with flat bands (final decision expected November 2026). The data-capture and Medicare-population
             adjustments are illustrative modeling assumptions. The Medicare eCQM method (*) does not exist until 2027
-            and only if finalized. The passing threshold and repayment scaling are
-            simplified stand-ins for values CMS publishes each year. Dollar figures are rough estimates for learning
+            and only if finalized. The passing threshold is a simplified stand-in for the annually published 40th-percentile
+            value; sharing and loss rates follow the statutory track rules (40% BASIC A–B, 50% C–E, 75% ENHANCED;
+            losses none / flat 30% / quality-scaled respectively), and savings are shared only past the ACO's
+            minimum savings rate (the low-revenue half-rate exception is not modeled). MIPS CQM (†) is available
+            for PY2026 but sunsets afterward under current law; CMS-1848-P proposes an extension. Dollar figures are rough estimates for learning
             purposes, not financial projections. Example-ACO profiles are calibrated to CMS's actual PY2024 Shared
             Savings Program results and participant files (data.cms.gov, 476 ACOs): the median real ACO had 13,151
             assigned beneficiaries, a $177M updated benchmark ($13,278 per person), 19 participating practice groups,
             and +4.2% gross savings; the strong scenario uses 75th-percentile values and the safety-net scenario
-            25th/10th-percentile values from the same file.
+            25th/10th-percentile values from the same file. (Practice-group counts in the stories are
+            narrative color, not percentile-derived.)
           </p>
         </div>
       </div>

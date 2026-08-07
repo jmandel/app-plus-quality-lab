@@ -71,7 +71,10 @@ React harness.
     MIPS fee-adjustment modeling and the TIN roster fan-out were later removed
     from the sim; see Model scope.)
   - Example-ACO scenarios **calibrated to real PY2024 MSSP results**
-    (see Data sources): the middle scenario is literally the median 2024 ACO.
+    (see Data sources): the middle scenario matches the median 2024 ACO on
+    size, benchmark, participant count, and savings rate; its BASIC Level B
+    track is an illustrative choice (held by ~22% of 2024 ACOs — most are
+    two-sided, with ENHANCED the plurality).
 
 ## Data sources (all fetched live during the session)
 
@@ -100,10 +103,10 @@ React harness.
   the proposed rule (2027+, not final).
 - **Reporting incentive ("deeming")**: ALL five measures via eCQM/MIPS CQM in
   any mix, each meeting 75% data completeness, plus ≥10th percentile on one
-  outcome measure AND ≥40th percentile on at least one other measure → deemed
-  to meet the quality performance standard. (The real rule counts the two
-  claims outcome measures toward the outcome condition; the lab checks 001/236
-  only, a conservative simplification.) All-or-nothing: one Medicare-column measure forfeits it. It is a
+  outcome measure AND ≥40th percentile on at least one of the remaining seven
+  measures → deemed to meet the quality performance standard. (The lab counts
+  CAHPS and the two claims outcome measures toward both conditions via their
+  fixed decile-equivalent points.) All-or-nothing: one Medicare-column measure forfeits it. It is a
   floor-raiser, never a ceiling-raiser — same maximum sharing rate as passing
   by score.
 - **COA**: finalized (CY2025 rule, from PY2025), eCQM-only, per-measure +1,
@@ -135,10 +138,20 @@ per-clinician QP status and billing arrangements with no public data source.
 ## Known simplifications (labeled in-app as well)
 
 - Whole-decile scoring (real MIPS awards fractional points 1.0–10.9 within a
-  decile) — this is why the lab's absolute scores run below the real PY2024
-  median quality score of 83.1; comparisons across strategies remain valid.
-- QPS threshold and loss-scaling curve are illustrative stand-ins for
-  annually published values.
+  decile) costs at most ~0.9 points per measure. The larger reason the lab's
+  absolute scores run below the oft-quoted PY2024 all-ACO median of 83.1 is
+  that 83.1 is Web-Interface-dominated: PY2024 digital-only reporters' median
+  was 74.58 (70.97 excluding EUC-floored ACOs) — the right comparator for an
+  all-digital measure set. Comparisons across strategies remain valid.
+- The QPS threshold is an illustrative stand-in (the published PY2026
+  comparator is 73.85 on the real MIPS scale). Sharing and loss rates and the
+  minimum savings rate follow statutory track rules, applied to the lab's
+  compressed score scale; the low-revenue half-rate exception is not modeled.
+- The § 425.512(a)(7)(ii)(B) 40th-percentile score floor (73.85 for PY2026)
+  is not modeled: whether its trigger fires when 112/113 lack pre-year
+  benchmarks is genuinely unsettled (CMS's July 2026 preamble suggests not).
+  If it fires, ACOs routing 112/113 to eCQM/MIPS CQM would be floored at the
+  40th percentile rather than losing points — the opposite of a penalty.
 - Data-capture efficiency and Medicare-population shift are labeled modeling
   assumptions with no per-ACO public source.
 - Deterministic model: known deciles, no score uncertainty — which prices
