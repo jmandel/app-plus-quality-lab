@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type * as React from "react";
 
 /* ============================================================
@@ -697,6 +697,21 @@ export default function AppPlusPathwayLab() {
   const statusColor = mach.status === "FAILED" ? T.fail : mach.status === "ALT" ? "#D97706" : T.pass;
   const deemLit = [mach.allFull, mach.allGates, mach.outcomeOK, mach.otherOK].filter(Boolean).length;
 
+  // Sticky outputs: when the column is taller than the viewport, pin its BOTTOM to the
+  // viewport bottom (negative top) so settlement + compare stay visible for the whole
+  // input scroll instead of clipping and releasing early.
+  const outRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = outRef.current;
+    if (!el) return;
+    const set = () => { el.style.top = `${Math.min(10, window.innerHeight - el.offsetHeight - 10)}px`; };
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    window.addEventListener("resize", set);
+    return () => { ro.disconnect(); window.removeEventListener("resize", set); };
+  }, []);
+
   return (
     <div style={{ minHeight: "100vh", background: T.bg, color: T.ink, ...sans }}>
       <style>{`
@@ -924,7 +939,7 @@ export default function AppPlusPathwayLab() {
           </Panel>
 
           </div>
-          <div className="lab-out">
+          <div className="lab-out" ref={outRef}>
 
           {/* stations */}
           <Panel title="The five reported measures — each scored against its method's real benchmark" tag="taller rung = wider scoring band" style={{ marginBottom: 12 }}>
