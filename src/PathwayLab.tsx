@@ -350,8 +350,9 @@ function RateMeter({ actual, max }: { actual: number; max: number }) {
         <b style={{ fontSize: 20, color: T.money, lineHeight: 1 }}>{actual.toFixed(actual % 1 ? 1 : 0)}%</b>
         <span style={{ fontSize: 11, color: T.inkSoft }}>of {max}% max</span>
       </div>
-      <div style={{ height: 12, border: `1px solid ${T.line}`, borderRadius: 3, background: "#fff", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${pct}%`, background: T.money, opacity: 0.8 }} />
+      <div style={{ display: "flex", height: 12, border: `1px solid ${T.line}`, borderRadius: 3, background: "#fff", overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, background: T.money, opacity: 0.8 }} />
+        {pct < 100 && <div style={{ flex: 1, background: `repeating-linear-gradient(135deg, rgba(220,38,38,0.22) 0 5px, #ffffff 5px 10px)` }} title="sharing rate forfeited by the quality score" />}
       </div>
     </div>
   );
@@ -1109,7 +1110,7 @@ export default function AppPlusPathwayLab() {
                   <>
                     <RateMeter actual={fin.sharePct} max={TRACKS[track].maxShare} />
                     {mach.status === "ALT"
-                      ? <span style={{ color: T.inkFaint }}>= {TRACKS[track].maxShare}% max × {mach.q.toFixed(1)}% score (standard missed, outcome floor met)</span>
+                      ? <span style={{ color: T.inkFaint }}>hatched = forfeited by the score: {TRACKS[track].maxShare}% max × {mach.q.toFixed(1)}% (standard missed, outcome floor met)</span>
                       : mach.status === "FAILED"
                         ? <span style={{ color: T.fail, fontWeight: 700 }}>quality standard not met · nothing shared</span>
                         : <span style={{ color: T.inkFaint }}>full rate — quality standard met {mach.status === "DEEMED" ? "(deemed)" : "(by score)"}</span>}
