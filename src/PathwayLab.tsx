@@ -763,6 +763,9 @@ export default function AppPlusPathwayLab() {
         table.cmp th,table.cmp td{border:1px solid ${T.line};padding:4px 7px;font-size:10.5px;text-align:right}
         table.cmp th{background:#fff;color:${T.inkSoft};font-weight:600;text-align:right}
         table.cmp td:first-child,table.cmp th:first-child{text-align:left}
+        table.cmp td,table.cmp th{font-variant-numeric:tabular-nums}
+        table.cmp td:last-child,table.cmp th:last-child{min-width:76px}
+        table.cmp td:nth-child(8),table.cmp th:nth-child(8){min-width:44px}
       `}</style>
       <div style={{ backgroundImage: `linear-gradient(${T.grid} 1px, transparent 1px), linear-gradient(90deg, ${T.grid} 1px, transparent 1px)`, backgroundSize: "28px 28px" }}>
         <div style={{ padding: "26px 20px 60px" }}>
