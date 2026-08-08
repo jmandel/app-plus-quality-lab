@@ -1089,7 +1089,6 @@ export default function AppPlusPathwayLab() {
               <a href="https://github.com/jmandel/app-plus-quality-lab" style={{ color: T.inkSoft }}>source on GitHub</a>
               <a href="https://github.com/jmandel/app-plus-quality-lab/blob/main/research/findings.md" style={{ color: T.inkSoft }}>calibration findings</a>
               <a href="https://github.com/jmandel/app-plus-quality-lab/tree/main/research" style={{ color: T.inkSoft }}>research dataset</a>
-              <a href="https://github.com/jmandel/app-plus-quality-lab/blob/main/docs/talk-track.md" style={{ color: T.inkSoft }}>talk track</a>
               <span style={{ color: T.inkFaint }}>an educational simulator, not reporting advice</span>
             </div>
             <div style={{ maxWidth: 920 }}>
