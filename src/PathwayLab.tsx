@@ -836,12 +836,13 @@ export default function AppPlusPathwayLab() {
                   best deciles of the eCQM ladders at strong care rates.
                 </p>
                 <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "3px 0 0", lineHeight: 1.45 }}>
-                  Electronic (eCQM) reporting can only count care that was recorded as structured data in the EHR.
-                  The slider sets what share of care that actually happened is captured that way, so electronic
-                  measured rates come out lower than the true rate. (For measure 001, which counts a bad outcome,
-                  missing data makes the rate look worse,
-                  i.e., higher.) CMS's benchmarks reflect this too — electronic reporters nationally score lower — which
-                  is why the electronic benchmark tables are easier.
+                  Electronic (eCQM) reporting is computed by the EHR over every eligible patient, all payers — there
+                  is no picking who to report. What varies is proof: care counts only if it exists as conforming
+                  structured data (coded labs, vitals, screenings). The slider is the share of truly-delivered care
+                  captured that way; the rest is reported as failures — the denominator doesn't shrink. (Measure 001
+                  counts a bad outcome, and its spec counts a missing result as poor control, so capture gaps push its
+                  rate up.) CMS's easier electronic benchmarks reflect the same tax nationally. A collapse severe
+                  enough to break the 75% completeness rule is the separate "reporting failure" checkbox below.
                 </p>
               </div>
               <div>
