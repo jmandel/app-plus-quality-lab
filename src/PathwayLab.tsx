@@ -241,7 +241,7 @@ interface Machine {
   status: Status;
 }
 
-function runMachine(routing: Routing, rates: Rates, gates: Gates, capture: number, fixedPts: FixedPts, proposedFlat: boolean): Machine {
+function runMachine(routing: Routing, rates: Rates, gates: Gates, capture: number, fixedPts: FixedPts, proposedFlat: boolean, assumePerfBench: boolean): Machine {
   const rows = MEASURES.map((m) => {
     const meas = measuredRate(m.id, routing[m.id], rates[m.id], capture);
     const b = getBench(m.id, routing[m.id], proposedFlat);
@@ -249,7 +249,11 @@ function runMachine(routing: Routing, rates: Rates, gates: Gates, capture: numbe
     // A submitted measure with no benchmark is excluded from BOTH earned points and the
     // available-points denominator (42 CFR 414.1367(c)(1)(i)); its estimate ladder stays
     // visible for context but scores nothing.
-    const excluded = !!b.est;
+    // Genuinely unsettled (research/findings.md X3): if CMS sets a performance-period benchmark
+    // after submissions (its historical practice), the measure IS scored — on a ladder unknowable
+    // now, estimated here by the 2025 tables; if none materializes, 414.1367(c)(1)(i) excludes it
+    // from both sides of the score. The toggle picks the reading.
+    const excluded = !!b.est && !assumePerfBench;
     const pts = !excluded && gates[m.id] ? Math.min(dec, b.cap || 10) : 0;
     const coa = routing[m.id] === "ecqm" && gates[m.id] && pts < 10 ? 1 : 0;
     return { ...m, pathway: routing[m.id], underlying: rates[m.id], measured: meas, decile: dec, pts, coa, capped: !!b.cap && dec > b.cap, excluded, bench: b, inverse: BENCH[m.id].inverse };
@@ -668,6 +672,7 @@ export default function AppPlusPathwayLab() {
   const [capture, setCapture] = useState(0.85);
   const [grossPct, setGrossPct] = useState(s0.grossPct);
   const [proposedFlat, setProposedFlat] = useState(true);
+  const [assumePerfBench, setAssumePerfBench] = useState(false);
   const [perCap, setPerCap] = useState(s0.perCap);
   const [track, setTrack] = useState<TrackKey>(s0.track);
   const [benes, setBenes] = useState(s0.benes);
@@ -692,7 +697,7 @@ export default function AppPlusPathwayLab() {
   const routeAll = (k: PathwayId) => setRouting({ "001": k, "134": k, "236": k, "112": k, "113": k });
   const allSame = PATHWAYS.find((k) => MEASURES.every((m) => routing[m.id] === k));
 
-  const mach = useMemo(() => runMachine(routing, rates, gates, capture, scen.fixedPts, proposedFlat), [routing, rates, gates, capture, scen, proposedFlat]);
+  const mach = useMemo(() => runMachine(routing, rates, gates, capture, scen.fixedPts, proposedFlat, assumePerfBench), [routing, rates, gates, capture, scen, proposedFlat, assumePerfBench]);
   const fin = useMemo(() => settle(mach, { grossPct, benchmarkM, track, msr }), [mach, grossPct, benchmarkM, track, msr]);
   const marginal = useMemo(() => {
     const plus = { ...mach, total: Math.min(mach.total + 1, mach.available), q: (Math.min(mach.total + 1, mach.available) / mach.available) * 100 };
@@ -712,7 +717,7 @@ export default function AppPlusPathwayLab() {
   const comparison = useMemo(() => {
     const ALLPASS: Gates = { "001": true, "134": true, "236": true, "112": true, "113": true };
     const finP = { grossPct, benchmarkM, track, msr };
-    const evalR = (r: Routing, g: Gates) => { const m = runMachine(r, rates, g, capture, scen.fixedPts, proposedFlat); return { m, f: settle(m, finP) }; };
+    const evalR = (r: Routing, g: Gates) => { const m = runMachine(r, rates, g, capture, scen.fixedPts, proposedFlat, assumePerfBench); return { m, f: settle(m, finP) }; };
     const rows: ComparisonRow[] = PATHWAYS.map((k) => ({
       key: k, label: `All ${CT[k].label}${CT[k].proposed ? "*" : ""}${CT[k].sunset ? "†" : ""}`, labelColor: CT[k].color,
       showMethods: false, ...evalR({ "001": k, "134": k, "236": k, "112": k, "113": k }, ALLPASS),
@@ -728,7 +733,7 @@ export default function AppPlusPathwayLab() {
     rows.push({ key: "cfg", label: "As configured above", labelColor: T.ink, showMethods: true, ...evalR(routing, gates) });
     rows.push({ key: "best", label: "Explore: highest-$ mix (243 checked)", labelColor: T.money, showMethods: true, ...best! });
     return rows;
-  }, [rates, capture, grossPct, benchmarkM, track, msr, scen, proposedFlat, routing, gates]);
+  }, [rates, capture, grossPct, benchmarkM, track, msr, scen, proposedFlat, assumePerfBench, routing, gates]);
 
   // Routing behind the "Best mix" row, reconstructed from its per-measure results,
   // so Step 2 can offer a one-click apply.
@@ -1008,6 +1013,15 @@ export default function AppPlusPathwayLab() {
                     <b>Apply pending proposed rule (on by default, not final):</b> score all Medicare CQM measures on
                     flat 10-point bands instead of the tougher real-data 2026 benchmarks for 001/134/236 (CMS-1848-P;
                     final decision ~November 2026) — uncheck to see current law.
+                  </span>
+                </label>
+                <label style={{ display: "flex", gap: 7, alignItems: "flex-start", marginTop: 8, cursor: "pointer" }}>
+                  <input type="checkbox" checked={assumePerfBench} onChange={(e) => setAssumePerfBench(e.target.checked)} style={{ marginTop: 2 }} />
+                  <span style={{ fontSize: 10.5, color: T.inkSoft, lineHeight: 1.45 }}>
+                    <b>Assume performance-period benchmarks for 112/113 (genuinely unknowable now):</b> CMS has
+                    historically set benchmarks after submissions for cells without one — if it does, these measures
+                    ARE scored (estimated here on 2025 ladders, out of 80); unchecked, they're excluded from both
+                    sides of the score per 42 CFR 414.1367(c)(1)(i) (out of 60).
                   </span>
                 </label>
                 <div style={{ marginTop: 8, fontSize: 10.5, color: T.inkSoft, lineHeight: 1.6 }}>
