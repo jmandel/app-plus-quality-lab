@@ -1,0 +1,55 @@
+PY,measure,measure_id_as_published,collection_type,has_benchmark,benchmark_type,avg_performance_rate,decile_1,decile_10,comment,source
+2021,1,001,MIPS CQM,Yes,Historical,,,,,2021/2022 QPP benchmark workbooks (S3)
+2021,1,001,eCQM,Yes,Historical,,,,,2021/2022 QPP benchmark workbooks (S3)
+2021,134,134,MIPS CQM,Yes,Historical,,,,,2021/2022 QPP benchmark workbooks (S3)
+2021,134,134,eCQM,No,-- (historical); performance-period benchmark published separately,,,,No historical benchmark; appears in 2021 Performance Period Benchmarks workbook,2021/2022 QPP benchmark workbooks (S3)
+2021,236,236,MIPS CQM,Yes,Historical,,,,,2021/2022 QPP benchmark workbooks (S3)
+2021,236,236,eCQM,Yes,Historical,,,,,2021/2022 QPP benchmark workbooks (S3)
+2022,1,001,MIPS CQM,Yes,Historical,,,,,2021/2022 QPP benchmark workbooks (S3)
+2022,1,001,eCQM,Yes,Historical,,,,,2021/2022 QPP benchmark workbooks (S3)
+2022,134,134,MIPS CQM,Yes,Historical,,,,,2021/2022 QPP benchmark workbooks (S3)
+2022,134,134,eCQM,No,none (historical removed AND no performance-period),,,,"Benchmark removed due to measure suppression for PY 2022; PP file: ""suppressed ... won't be scored against a benchmark (historical or performance period)""",2021/2022 QPP benchmark workbooks (S3)
+2022,236,236,MIPS CQM,Yes,Historical,,,,,2021/2022 QPP benchmark workbooks (S3)
+2022,236,236,eCQM,No,none (historical removed AND no performance-period),,,,Benchmark removed due to measure suppression for PY 2022; PP file: same suppression note,2021/2022 QPP benchmark workbooks (S3)
+2023,1,001,MIPS CQM,Yes,Historical,34.00,99.00 - 90.01,<= 10.00,,qpp benchmarks-csv/quality/2023
+2023,1,001,eCQM,Yes,Historical,46.35,99.52 - 93.34,<= 17.07,,qpp benchmarks-csv/quality/2023
+2023,134,134,MIPS CQM,Yes,Historical,83.32,0.05 - 27.20,100.00,,qpp benchmarks-csv/quality/2023
+2023,134,134,eCQM,Yes,Historical,39.95,0.07 - 1.79,>= 90.52,,qpp benchmarks-csv/quality/2023
+2023,236,236,MIPS CQM,Yes,Historical,68.96,1.00 - 9.99,>= 90.00,,qpp benchmarks-csv/quality/2023
+2023,236,236,eCQM,Yes,Historical,62.30,2.74 - 41.95,>= 81.35,,qpp benchmarks-csv/quality/2023
+2024,1,001,MIPS CQM,Yes,Historical,27.30,99.00 - 90.01,<= 10.00,,qpp benchmarks-csv/quality/2024
+2024,1,001SSP,Medicare CQM,Yes,Performance Period,25.78,80.94 - 49.20,<= 7.03,,qpp benchmarks-csv/quality/2024
+2024,1,001,eCQM,Yes,Historical,43.53,99.50 - 93.63,<= 14.53,,qpp benchmarks-csv/quality/2024
+2024,134,134,MIPS CQM,Yes,Historical,89.55,0.05 - 61.76,100.00,,qpp benchmarks-csv/quality/2024
+2024,134,134SSP,Medicare CQM,Yes,Performance Period,62.87,11.44 - 32.50,>= 92.34,,qpp benchmarks-csv/quality/2024
+2024,134,134,eCQM,Yes,Performance Period,45.55,0.07 - 2.69,>= 93.44,,qpp benchmarks-csv/quality/2024
+2024,236,236,MIPS CQM,Yes,Historical,71.26,1.00 - 9.99,>= 90.00,,qpp benchmarks-csv/quality/2024
+2024,236,236SSP,Medicare CQM,Yes,Performance Period,67.87,13.68 - 44.86,>= 82.81,,qpp benchmarks-csv/quality/2024
+2024,236,236,eCQM,Yes,Performance Period,66.06,4.76 - 45.27,>= 84.04,,qpp benchmarks-csv/quality/2024
+2025,1,001,MIPS CQM,Yes,Historical,25.75,99.00 - 90.01,<= 10.00,,qpp benchmarks-csv/quality/2025
+2025,1,001SSP,Medicare CQM,Yes,Historical,--,99.00 - 90.01,<= 10.00,,qpp benchmarks-csv/quality/2025
+2025,1,001,eCQM,Yes,Historical,42.70,99.44 - 94.36,<= 13.46,,qpp benchmarks-csv/quality/2025
+2025,112,112,MIPS CQM,Yes,Historical,69.16,1.20 - 29.55,100.00,,qpp benchmarks-csv/quality/2025
+2025,112,112SSP,Medicare CQM,Yes,Historical,--,1.00 - 9.99,>= 90.00,,qpp benchmarks-csv/quality/2025
+2025,112,112,eCQM,Yes,Historical,56.08,0.18 - 9.47,>= 85.59,,qpp benchmarks-csv/quality/2025
+2025,134,134,MIPS CQM,Yes,Historical,89.24,0.08 - 61.67,100.00,,qpp benchmarks-csv/quality/2025
+2025,134,134SSP,Medicare CQM,Yes,Historical,--,1.00 - 9.99,>= 90.00,,qpp benchmarks-csv/quality/2025
+2025,134,134,eCQM,Yes,Historical,48.51,0.09 - 4.95,>= 94.99,,qpp benchmarks-csv/quality/2025
+2025,236,236,MIPS CQM,Yes,Historical,72.82,1.00 - 9.99,>= 90.00,,qpp benchmarks-csv/quality/2025
+2025,236,236SSP,Medicare CQM,Yes,Historical,--,1.00 - 9.99,>= 90.00,,qpp benchmarks-csv/quality/2025
+2025,236,236,eCQM,Yes,Historical,66.23,5.56 - 45.70,>= 84.74,,qpp benchmarks-csv/quality/2025
+2026,1,001,MIPS CQM,Yes,Historical,23.12,99.00 - 90.01,<= 10.00,,qpp benchmarks-csv/quality/2026
+2026,1,001SSP,Medicare CQM,Yes,Historical,25.78,80.94 - 49.20,<= 7.03,,qpp benchmarks-csv/quality/2026
+2026,1,001,eCQM,Yes,Historical,40.91,99.49 - 93.99,<= 12.50,,qpp benchmarks-csv/quality/2026
+2026,112,112,MIPS CQM,No,--,--,--,--,Insufficient volume of data submitted in PY 2024 to establish historical benchmark.,qpp benchmarks-csv/quality/2026
+2026,112,112SSP,Medicare CQM,Yes,Historical,--,1.00 - 9.99,>= 90.00,,qpp benchmarks-csv/quality/2026
+2026,112,112,eCQM,No,--,--,--,--,Insufficient volume of data submitted in PY 2024 to establish historical benchmark.,qpp benchmarks-csv/quality/2026
+2026,113,113,MIPS CQM,No,--,--,--,--,Insufficient volume of data submitted in PY 2024 to establish historical benchmark.,qpp benchmarks-csv/quality/2026
+2026,113,113SSP,Medicare CQM,Yes,Historical,--,1.00 - 9.99,>= 90.00,,qpp benchmarks-csv/quality/2026
+2026,113,113,eCQM,No,--,--,--,--,Insufficient volume of data submitted in PY 2024 to establish historical benchmark.,qpp benchmarks-csv/quality/2026
+2026,134,134,MIPS CQM,Yes,Historical,85.58,0.07 - 40.33,100.00,,qpp benchmarks-csv/quality/2026
+2026,134,134SSP,Medicare CQM,Yes,Historical,62.87,11.44 - 32.50,>= 92.34,,qpp benchmarks-csv/quality/2026
+2026,134,134,eCQM,Yes,Historical,45.55,0.07 - 2.69,>= 93.44,,qpp benchmarks-csv/quality/2026
+2026,236,236,MIPS CQM,Yes,Historical,68.71,1.00 - 9.99,>= 90.00,,qpp benchmarks-csv/quality/2026
+2026,236,236SSP,Medicare CQM,Yes,Historical,67.87,13.68 - 44.86,>= 82.81,,qpp benchmarks-csv/quality/2026
+2026,236,236,eCQM,Yes,Historical,66.06,4.76 - 45.27,>= 84.04,,qpp benchmarks-csv/quality/2026

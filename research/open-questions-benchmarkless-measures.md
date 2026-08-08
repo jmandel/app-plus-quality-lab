@@ -62,8 +62,14 @@ pre-published benchmark, which of the following occurs?
    performance category score … when … (B) At least one of the required measures in the APP Plus
    quality measure set does not have a benchmark as described at § 414.1380(b)(1)(i)(A)."* The
    PY2026 40th-percentile value is **73.85** (CMS QPS memo, derivation 77.73 + 74.54 + 69.27 = 221.54 / 3).
-   This provision is **real and applied**: the PY2024 MSSP PUF carries a `Recvd40p` flag on 35 of
-   476 ACOs, every one scored at exactly 77.05 (the PY2024 40th-percentile value).
+   **CORRECTED 2026-08-08:** an earlier draft of this brief claimed this provision is "real and
+   applied" because the PY2024 PUF flags 35 ACOs at exactly 77.05. That attribution was **wrong**.
+   `Recvd40p` is the **extreme-and-uncontrollable-circumstances** floor at § 425.512(c)(3)(iii),
+   not the missing-benchmark floor: all 35 flagged ACOs carry `DisAffQual=1`, the pattern is fully
+   explained by `DisAffQual=1 AND organic score < 77.05`, it replicates across four years
+   (`Recvd30p` in PY2021–23) with zero counterexamples, and the PUF has **no field at all** for the
+   (a)(7) floor. **The § 425.512(a)(7)(ii)(B) benchmark prong has no observed instance anywhere in
+   the public record.** See `answers-q1-empirical.md`.
 4. **CMS's July 2026 preamble** (CY2027 PFS proposed rule) states that *"none of the eCQMs, MIPS
    CQMs, or Medicare CQMs that Shared Savings Program ACOs have reported over the past four PYs
    lacked benchmarks."* This cuts **against** (b) and (c) firing in practice.
@@ -103,9 +109,13 @@ cells. Is there anything in the CY2026 PFS final rule preamble?
 relative to (i) the submission deadline and (ii) the settlement/reconciliation notice? Can an ACO
 know its score's ladder before it must choose a collection type?
 
-1.5 **The 35 PY2024 ACOs.** What actually triggered `Recvd40p` for those ACOs — which required
-measure lacked a benchmark, and under which collection type? This is the single best empirical
-window into how CMS operationalizes § 425.512(a)(7)(ii)(B).
+1.5 **The 35 PY2024 ACOs.** ~~What actually triggered `Recvd40p`…~~ **ANSWERED — see
+`answers-q1-empirical.md`.** They are extreme-and-uncontrollable-circumstances cases, unrelated to
+benchmarks. The decisive empirical test turned out to be elsewhere: **PY2024 Medicare CQM**, a
+brand-new collection type with no possible pre-year benchmark (zero Medicare CQM rows exist in the
+PY2023 benchmark file). CMS built **performance-period** benchmarks for it, and of the 26 ACOs
+that reported it, **14 scored below the floor value and were not floored** — so "does not have a
+benchmark" is evaluated **at scoring time**, and a performance-period benchmark satisfies it.
 
 1.6 **Interaction.** If a measure is excluded under § 414.1367(c)(1)(i), does the
 § 425.512(a)(7)(ii)(B) floor *also* fire (the measure still "does not have a benchmark"), or does

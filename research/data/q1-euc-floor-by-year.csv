@@ -1,0 +1,17 @@
+PY,puf_field,percentile,floor_value,n_acos,n_flag1,pct_flag1,n_DisAffQual1,flag1_subset_of_DisAffQual,n_at_floor_value,n_at_floor_without_flag,n_EUC_not_floored,min_score_EUC_not_floored,reporting_mechanism,n_in_mech,n_floored_in_mech,n_EUC_in_mech
+2021,Recvd30p,30th,61.73,475,4,0.84,475,True,4,0,471,63.4,WI only,459,1,459
+2021,Recvd30p,30th,61.73,475,4,0.84,475,True,4,0,471,63.4,WI+digital,7,0,7
+2021,Recvd30p,30th,61.73,475,4,0.84,475,True,4,0,471,63.4,digital only,6,0,6
+2021,Recvd30p,30th,61.73,475,4,0.84,475,True,4,0,471,63.4,neither,3,3,3
+2022,Recvd30p,30th,70.63,482,39,8.09,482,True,39,0,443,70.75,WI only,442,19,442
+2022,Recvd30p,30th,70.63,482,39,8.09,482,True,39,0,443,70.75,WI+digital,15,1,15
+2022,Recvd30p,30th,70.63,482,39,8.09,482,True,39,0,443,70.75,digital only,22,16,22
+2022,Recvd30p,30th,70.63,482,39,8.09,482,True,39,0,443,70.75,neither,3,3,3
+2023,Recvd30p,30th,65.76,453,22,4.86,453,True,22,0,431,66.6,WI only,379,4,379
+2023,Recvd30p,30th,65.76,453,22,4.86,453,True,22,0,431,66.6,WI+digital,39,0,39
+2023,Recvd30p,30th,65.76,453,22,4.86,453,True,22,0,431,66.6,digital only,33,16,33
+2023,Recvd30p,30th,65.76,453,22,4.86,453,True,22,0,431,66.6,neither,2,2,2
+2024,Recvd40p,40th,77.05,476,35,7.35,124,True,35,0,89,77.4,WI only,301,10,80
+2024,Recvd40p,40th,77.05,476,35,7.35,124,True,35,0,89,77.4,WI+digital,91,1,17
+2024,Recvd40p,40th,77.05,476,35,7.35,124,True,35,0,89,77.4,digital only,76,16,19
+2024,Recvd40p,40th,77.05,476,35,7.35,124,True,35,0,89,77.4,neither,8,8,8

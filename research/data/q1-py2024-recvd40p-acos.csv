@@ -1,0 +1,36 @@
+ACO_ID,ACO_Name,QualScore,Recvd40p,DisAffQual,Report_WI,Report_eCQM_CQM_MedicareCQM,reporting_mechanism,digital_collection_types_with_published_rates,Current_Track,N_AB,Rev_Exp_Cat,Agree_Type,Met_QPS,Met_40pctl,Met_Incentive,Met_FirstYear,Met_SSP_quality_reporting_requirements
+A1001,"PBACO Holding, LLC",77.05,1,1,0,1,digital only,MedicareCQM,EN,116175,Low Revenue,Renewal,1,1,0,0,1
+A1061,Ascension Care Management Health Partners Tennessee,77.05,1,1,0,0,neither,none,EN,34901,High Revenue,Renewal,1,1,0,0,1
+A1501,"AMITA Health Accountable Care Organization, LLC",77.05,1,1,0,0,neither,none,E,41314,Low Revenue,Renewal,1,1,0,0,0
+A2202,"SJFI, LLC",77.05,1,1,0,0,neither,none,B,13159,High Revenue,Renewal,1,1,0,0,1
+A2205,St Vincents Accountable Care Organization LLC,77.05,1,1,0,0,neither,none,E,10504,Low Revenue,Renewal,1,1,0,0,0
+A2299,Northwest Florida Health Partners LLC,77.05,1,1,0,0,neither,none,B,14767,High Revenue,Renewal,1,1,0,0,0
+A2599,"Ascension Care Management Health Partners Evansville, LLC",77.05,1,1,0,0,neither,none,B,8339,High Revenue,Renewal,1,1,0,0,0
+A2600,"Ascension Care Management Health Partners Indianapolis, LLC",77.05,1,1,0,0,neither,none,E,18750,Low Revenue,Renewal,1,1,0,0,0
+A2801,"Central Florida ACO, LLC",77.05,1,1,1,0,WI only,none,EN,3064,High Revenue,Renewal,1,1,0,0,1
+A2802,Space Coast ACO LLC,77.05,1,1,1,0,WI only,none,EN,7019,Low Revenue,Renewal,1,1,0,0,1
+A2952,"Alliance ACO, LLC",77.05,1,1,0,1,digital only,MIPSCQM,B,2647,Low Revenue,Renewal,1,1,1,0,1
+A3466,"Louisiana Primary Care Accountable Care Organization, LLC",77.05,1,1,0,1,digital only,eCQM,EN,5555,Low Revenue,Renewal,1,1,1,0,1
+A3715,"CHSPSC ACO 8, LLC",77.05,1,1,1,0,WI only,none,B,7836,High Revenue,Renewal,1,1,0,0,1
+A3724,"CHSPSC ACO 14, LLC",77.05,1,1,1,0,WI only,none,B,9640,High Revenue,Renewal,1,1,0,0,1
+A3834,"CareMax National Care Network, LLC",77.05,1,1,0,1,digital only,MIPSCQM,EN,73142,Low Revenue,Renewal,1,1,1,0,1
+A4885,"WellMed Foundation Medicare ACO, LLC",77.05,1,1,1,0,WI only,none,A,11245,Low Revenue,Initial,1,1,0,0,1
+A5039,"AdvantagePoint Health Alliance - Western North Carolina, LLC",77.05,1,1,0,1,digital only,eCQM,E,7311,High Revenue,Renewal,1,1,1,0,1
+A5045,"HCP ACO California, LLC",77.05,1,1,1,1,WI+digital,none,EN,23591,Low Revenue,Re-entering,1,1,1,0,1
+A5069,"EPC ACO, LLC",77.05,1,1,0,1,digital only,MIPSCQM,EN,16361,Low Revenue,Renewal,1,1,1,0,1
+A5080,"CareMax Accountable Care Network, LLC",77.05,1,1,0,1,digital only,MIPSCQM,EN,7378,Low Revenue,Re-entering,1,1,1,0,1
+A5177,"Tryon ACO, LLC",77.05,1,1,0,1,digital only,eCQM,EN,13222,Low Revenue,Re-entering,1,1,1,0,1
+A5191,ELEHEALTH MEDICARE ACO LLC,77.05,1,1,0,1,digital only,MedicareCQM,A,5603,Low Revenue,Initial,1,1,0,0,1
+A5192,Lore Health ACO LLC,77.05,1,1,0,1,digital only,MedicareCQM,EN,13369,Low Revenue,Initial,1,1,0,0,1
+A5215,"Responsive Care Solutions, LLC",77.05,1,1,0,1,digital only,MIPSCQM+MedicareCQM,B,5204,High Revenue,Initial,1,1,1,0,1
+A5329,"Ascension Care Management Health Partners Wisconsin, LLC",77.05,1,1,0,0,neither,none,A,20836,High Revenue,Initial,1,1,0,0,1
+A5334,Main Street Rural Health Hickory ACO LLC,77.05,1,1,0,1,digital only,MedicareCQM,A,9996,Low Revenue,Initial,1,1,0,1,1
+A5335,Memorial Health Partners ACO LLC,77.05,1,1,1,0,WI only,none,A,9576,Low Revenue,Initial,1,1,0,1,1
+A5350,"Care Partners ACO, LLC",77.05,1,1,1,0,WI only,none,A,5177,Low Revenue,Initial,1,1,0,1,1
+A5404,Main Street Rural Health Willow ACO LLC,77.05,1,1,0,1,digital only,MedicareCQM,A,8069,Low Revenue,Initial,1,1,0,1,1
+A5431,"Accountable Care Coalition of Quality Health II, LLC",77.05,1,1,1,0,WI only,none,EN,5858,Low Revenue,Initial,1,1,0,1,1
+A5450,APOLLOMED MSSP I INC,77.05,1,1,0,1,digital only,MedicareCQM,EN,6240,Low Revenue,Initial,1,1,0,1,1
+A5465,"UF HEALTH ACO JACKSONVILLE, LLC",77.05,1,1,0,1,digital only,eCQM,A,5127,Low Revenue,Initial,1,1,1,1,1
+A5468,"UF HEALTH ACO GAINESVILLE, LLC",77.05,1,1,0,1,digital only,eCQM,A,10726,High Revenue,Initial,1,1,1,1,1
+A5471,KPC Excel LLC,77.05,1,1,1,0,WI only,none,EN,10055,Low Revenue,Initial,1,1,0,1,1
+A5488,Physicians Collaborative Solutions,77.05,1,1,1,0,WI only,none,A,14131,High Revenue,Initial,1,1,0,1,1

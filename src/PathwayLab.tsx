@@ -232,6 +232,8 @@ interface Machine {
   fixed: number;
   total: number;
   q: number;
+  qRaw: number;
+  floored: boolean;
   available: number;
   allFull: boolean;
   allGates: boolean;
@@ -263,7 +265,12 @@ function runMachine(routing: Routing, rates: Rates, gates: Gates, capture: numbe
   const coa = Math.min(rows.reduce((s, r) => s + r.coa, 0), available * 0.1);
   const fixed = fixedPts.cahps + fixedPts.claims1 + fixedPts.claims2;
   const total = Math.min(earned + coa + fixed, available);
-  const q = (total / available) * 100;
+  const qRaw = (total / available) * 100;
+  // 42 CFR 425.512(a)(7)(ii)(B): if a required measure ends up with no benchmark of any kind,
+  // CMS uses the HIGHER of the ACO's score or the 40th-percentile equivalent (73.85 for PY2026).
+  // Exclusion and this floor share a trigger and fire together (88 FR 79123; research answers-q1).
+  const floored = rows.some((r) => r.excluded) && qRaw < QPS;
+  const q = floored ? QPS : qRaw;
   const allFull = rows.every((r) => CT[r.pathway].fullPop);
   const allGates = rows.every((r) => gates[r.id]);
   // Outcome condition: 001, 236, or either administrative-claims outcome measure (479/484,
@@ -279,7 +286,7 @@ function runMachine(routing: Routing, rates: Rates, gates: Gates, capture: numbe
     || rows.filter((r) => r.outcome && r.decile >= 2).length >= 2 && rows.some((r) => r.decile >= 5 && r.pts > 0);
   const deemed = allFull && allGates && outcomeOK && otherOK;
   const status = deemed ? "DEEMED" : q >= QPS ? "MET" : outcomeOK ? "ALT" : "FAILED";
-  return { rows, earned, coa, fixed, total, q, available, allFull, allGates, outcomeOK, otherOK, deemed, status };
+  return { rows, earned, coa, fixed, total, q, qRaw, floored, available, allFull, allGates, outcomeOK, otherOK, deemed, status };
 }
 
 /* ---- Real-context pins for the input sliders. Care-rate pins are measured-rate percentiles
@@ -672,7 +679,7 @@ export default function AppPlusPathwayLab() {
   const [capture, setCapture] = useState(0.85);
   const [grossPct, setGrossPct] = useState(s0.grossPct);
   const [proposedFlat, setProposedFlat] = useState(true);
-  const [assumePerfBench, setAssumePerfBench] = useState(false);
+  const [assumePerfBench, setAssumePerfBench] = useState(true);
   const [perCap, setPerCap] = useState(s0.perCap);
   const [track, setTrack] = useState<TrackKey>(s0.track);
   const [benes, setBenes] = useState(s0.benes);
@@ -1018,10 +1025,11 @@ export default function AppPlusPathwayLab() {
                 <label style={{ display: "flex", gap: 7, alignItems: "flex-start", marginTop: 8, cursor: "pointer" }}>
                   <input type="checkbox" checked={assumePerfBench} onChange={(e) => setAssumePerfBench(e.target.checked)} style={{ marginTop: 2 }} />
                   <span style={{ fontSize: 10.5, color: T.inkSoft, lineHeight: 1.45 }}>
-                    <b>Assume performance-period benchmarks for 112/113 (genuinely unknowable now):</b> CMS has
-                    historically set benchmarks after submissions for cells without one — if it does, these measures
-                    ARE scored (estimated here on 2025 ladders, out of 80); unchecked, they're excluded from both
-                    sides of the score per 42 CFR 414.1367(c)(1)(i) (out of 60).
+                    <b>CMS builds a performance-period benchmark for 112/113 (on by default; decided in 2027):</b>{" "}
+                    after submissions close CMS tries to build a benchmark from that year's own data — in PY2024 it
+                    did so for every benchmark-less required measure. Then these score normally, out of 80. Uncheck
+                    for the fallback: too few submissions, so they're excluded from both sides (out of 60) AND the
+                    score is floored at 73.85 — which passes the standard outright.
                   </span>
                 </label>
                 <div style={{ marginTop: 8, fontSize: 10.5, color: T.inkSoft, lineHeight: 1.6 }}>
@@ -1068,7 +1076,7 @@ export default function AppPlusPathwayLab() {
 
           {/* waterfall + rails */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))", gap: 12, marginBottom: 12, alignItems: "start" }}>
-            <Panel title="How the points add up" tag={`score ${mach.q.toFixed(1)}% = ${mach.total} of ${mach.available} pts`}>
+            <Panel title="How the points add up" tag={`score ${mach.qRaw.toFixed(1)}% = ${mach.total} of ${mach.available} pts${mach.floored ? ` → floored to ${QPS}` : ""}`}>
               <Waterfall steps={steps} total={mach.total} available={mach.available} />
               <p style={{ fontSize: 10, color: T.inkFaint, margin: "6px 0 0" }}>
                 One bar per measure; COA = electronic bonus point; FIXT = CMS-scored survey + claims. Total ÷ {mach.available} = the score.
@@ -1095,6 +1103,12 @@ export default function AppPlusPathwayLab() {
                   </b>
                 </div>
                 <ThresholdStrip value={mach.q} threshold={QPS} flagLabel="passing bar 73.85 (real '26)" dimmed={mach.deemed} />
+                {mach.floored && (
+                  <p style={{ fontSize: 9.5, color: "#D97706", margin: "3px 0 0", lineHeight: 1.4 }}>
+                    Floored: score {mach.qRaw.toFixed(1)} lifted to 73.85 — a required measure had no benchmark
+                    (42 CFR 425.512(a)(7)(ii)(B)), so the standard is met by score.
+                  </p>
+                )}
                 {!mach.deemed && mach.q < QPS && (
                   <p style={{ fontSize: 9.5, color: T.inkFaint, margin: "4px 0 0", lineHeight: 1.4 }}>
                     Below the bar with no automatic pass: if an outcome measure still beat the bottom 10%, the ACO
