@@ -574,7 +574,7 @@ interface WaterfallStep {
 }
 
 function Waterfall({ steps, total }: { steps: WaterfallStep[]; total: number }) {
-  const w = 640, h = 320, pad = { l: 34, r: 8, t: 14, b: 24 };
+  const w = 640, h = 260, pad = { l: 34, r: 8, t: 14, b: 24 };
   const plotW = w - pad.l - pad.r, plotH = h - pad.t - pad.b;
   const n = steps.length + 1, colW = plotW / n, barW = Math.min(colW * 0.62, 50);
   const y = (v: number) => pad.t + plotH - (v / AVAILABLE) * plotH;
@@ -1026,7 +1026,7 @@ export default function AppPlusPathwayLab() {
 
 
           {/* waterfall + rails */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))", gap: 12, marginBottom: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))", gap: 12, marginBottom: 12, alignItems: "start" }}>
             <Panel title="How the points add up" tag={`score ${mach.q.toFixed(1)}% = ${mach.total} of ${mach.available} pts`}>
               <Waterfall steps={steps} total={mach.total} />
               <p style={{ fontSize: 10, color: T.inkFaint, margin: "6px 0 0" }}>
@@ -1074,38 +1074,56 @@ export default function AppPlusPathwayLab() {
                   {mach.status === "DEEMED" ? "all four Route A conditions met" : mach.status === "MET" ? "Route B — score above the bar" : mach.status === "ALT" ? "neither route; the outcome floor keeps scaled sharing" : "neither route, no outcome floor"}
                 </span>
               </div>
-              <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 5, fontSize: 11, ...mono, color: T.inkSoft }}>
-                <span style={{ fontSize: 10, color: T.inkFaint }}>SETTLEMENT · {TRACKS[track].label}</span>
+            </Panel>
+          </div>
+
+          <Panel title="Settlement — quality unlocks the sharing rate" tag={TRACKS[track].label} style={{ marginBottom: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 18, alignItems: "start", ...mono, fontSize: 11, color: T.inkSoft }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 10, color: T.inkFaint }}>{fin.gross >= 0 ? "SAVINGS POOL" : "OVERSPEND"}</span>
+                <b style={{ fontSize: 20, lineHeight: 1, color: fin.gross >= 0 ? T.money : T.debt }}>{fmt$(Math.abs(fin.gross))}</b>
+                <span style={{ color: T.inkFaint }}>spent {Math.abs(grossPct).toFixed(1)}% {fin.gross >= 0 ? "under" : "over"} the ${benchmarkM}M benchmark</span>
+                {fin.gross >= 0 && msr > 0 && (grossPct >= msr
+                  ? <span style={{ color: T.inkFaint, cursor: "help" }} title="Minimum savings rate: CMS shares nothing until savings beat this margin — a noise gate, sized by ACO population for one-sided BASIC tracks, electable down to 0% for two-sided.">qualifies: {grossPct.toFixed(1)}% ≥ {msr.toFixed(1)}% minimum savings rate ✓</span>
+                  : <span style={{ color: T.fail, fontWeight: 700, cursor: "help" }} title="Minimum savings rate: CMS shares nothing until savings beat this margin — a noise gate, sized by ACO population for one-sided BASIC tracks, electable down to 0% for two-sided.">does not qualify: under the {msr.toFixed(1)}% minimum savings rate · nothing shared</span>)}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 {fin.gross >= 0 ? (
                   <>
-                    <span>savings pool <b style={{ color: T.money }}>{fmt$(fin.gross)}</b> <span style={{ color: T.inkFaint }}>(spent {grossPct.toFixed(1)}% under the ${benchmarkM}M benchmark)</span></span>
-                    {msr > 0 && (grossPct >= msr
-                      ? <span style={{ color: T.inkFaint, cursor: "help" }} title="Minimum savings rate: CMS shares nothing until savings beat this margin — a noise gate, sized by ACO population for one-sided BASIC tracks, electable down to 0% for two-sided.">qualifies for sharing: {grossPct.toFixed(1)}% savings ≥ {msr.toFixed(1)}% minimum ✓</span>
-                      : <span style={{ color: T.fail, fontWeight: 700, cursor: "help" }} title="Minimum savings rate: CMS shares nothing until savings beat this margin — a noise gate, sized by ACO population for one-sided BASIC tracks, electable down to 0% for two-sided.">does not qualify: {grossPct.toFixed(1)}% savings under the {msr.toFixed(1)}% minimum · nothing shared</span>)}
                     <RateMeter actual={fin.sharePct} max={TRACKS[track].maxShare} />
-                    {mach.status === "ALT" && <span style={{ color: T.inkFaint }}>= {TRACKS[track].maxShare}% max × {mach.q.toFixed(1)}% score (standard missed, outcome floor met)</span>}
-                    {mach.status === "FAILED" && <span style={{ color: T.fail, fontWeight: 700 }}>quality standard not met · nothing shared</span>}
-                    <span>→ ACO share <b style={{ color: T.money, fontSize: 14 }}>{fmt$(fin.savings$)}</b></span>
+                    {mach.status === "ALT"
+                      ? <span style={{ color: T.inkFaint }}>= {TRACKS[track].maxShare}% max × {mach.q.toFixed(1)}% score (standard missed, outcome floor met)</span>
+                      : mach.status === "FAILED"
+                        ? <span style={{ color: T.fail, fontWeight: 700 }}>quality standard not met · nothing shared</span>
+                        : <span style={{ color: T.inkFaint }}>full rate — quality standard met {mach.status === "DEEMED" ? "(deemed)" : "(by score)"}</span>}
+                  </>
+                ) : TRACKS[track].loss === "none" ? (
+                  <>
+                    <span style={{ fontSize: 10, color: T.inkFaint }}>LOSS RAIL</span>
+                    <b style={{ fontSize: 20, lineHeight: 1, color: T.money }}>none</b>
+                    <span style={{ color: T.inkFaint }}>one-sided track · no shared losses</span>
+                  </>
+                ) : TRACKS[track].loss === "flat30" ? (
+                  <>
+                    <span style={{ fontSize: 10, color: T.inkFaint }}>LOSS RATE</span>
+                    <b style={{ fontSize: 20, lineHeight: 1, color: T.debt }}>30%</b>
+                    <span style={{ color: T.inkFaint }}>fixed — quality changes nothing</span>
                   </>
                 ) : (
                   <>
-                    <span>overspend <b style={{ color: T.debt }}>{fmt$(Math.abs(fin.gross))}</b> <span style={{ color: T.inkFaint }}>({Math.abs(grossPct).toFixed(1)}% over the ${benchmarkM}M benchmark)</span></span>
-                    {TRACKS[track].loss === "none" ? (
-                      <span>one-sided track · <b style={{ color: T.money }}>no shared losses</b></span>
-                    ) : TRACKS[track].loss === "flat30" ? (
-                      <span>fixed 30% loss rate (quality-blind) → repays <b style={{ color: T.debt }}>{fmt$(Math.abs(fin.losses$))}</b></span>
-                    ) : (
-                      <>
-                        <span>max exposure 75% ({fmt$(0.75 * Math.abs(fin.gross))}) · quality trims the rate to <b style={{ color: T.debt }}>{fin.lossPct.toFixed(0)}%</b> → repays <b style={{ color: T.debt }}>{fmt$(Math.abs(fin.losses$))}</b></span>
-                        <span>quality protection <b style={{ color: T.money }}>{fmt$((0.75 - fin.lossPct / 100) * Math.abs(fin.gross))}</b> avoided</span>
-                      </>
-                    )}
+                    <span style={{ fontSize: 10, color: T.inkFaint }}>LOSS RATE</span>
+                    <b style={{ fontSize: 20, lineHeight: 1, color: T.debt }}>{fin.lossPct.toFixed(0)}%</b>
+                    <span style={{ color: T.inkFaint }}>quality trims the 75% max exposure ({fmt$(0.75 * Math.abs(fin.gross))}) · protection <b style={{ color: T.money }}>{fmt$((0.75 - fin.lossPct / 100) * Math.abs(fin.gross))}</b> avoided</span>
                   </>
                 )}
-                <span style={{ borderTop: `1px solid ${T.line}`, paddingTop: 5 }}>combined result: <b style={{ color: fin.net$ >= 0 ? T.money : T.debt, fontSize: 14 }}>{fmt$(fin.net$)}</b> · one extra quality point is currently worth <b style={{ color: marginal >= 0 ? T.money : T.debt }}>{marginal >= 0 ? "+" : ""}${Math.abs(marginal) >= 1000 ? (marginal / 1000).toFixed(2) + "M" : marginal.toFixed(0) + "k"}</b></span>
               </div>
-            </Panel>
-          </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 10, color: T.inkFaint }}>NET TO ACO</span>
+                <b style={{ fontSize: 20, lineHeight: 1, color: fin.net$ >= 0 ? T.money : T.debt }}>{fmt$(fin.net$)}</b>
+                <span style={{ color: T.inkFaint }}>one extra quality point is worth <b style={{ color: marginal >= 0 ? T.money : T.debt }}>{marginal >= 0 ? "+" : ""}${Math.abs(marginal) >= 1000 ? (marginal / 1000).toFixed(2) + "M" : marginal.toFixed(0) + "k"}</b></span>
+              </div>
+            </div>
+          </Panel>
 
           {/* pathway comparison */}
           <Panel title="Compare: what each reporting method would yield for this ACO" tag="same clinical performance in every row">
