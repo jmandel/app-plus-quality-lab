@@ -148,11 +148,15 @@ per-clinician QP status and billing arrangements with no public data source.
   points below CMS's scale — treat near-bar outcomes as borderline. Sharing
   and loss rates and the minimum savings rate follow statutory track rules;
   the low-revenue half-rate exception is not modeled.
-- The § 425.512(a)(7)(ii)(B) 40th-percentile score floor (73.85 for PY2026)
-  is not modeled: whether its trigger fires when 112/113 lack pre-year
-  benchmarks is genuinely unsettled (CMS's July 2026 preamble suggests not).
-  If it fires, ACOs routing 112/113 to eCQM/MIPS CQM would be floored at the
-  40th percentile rather than losing points — the opposite of a penalty.
+- Benchmark-less measures (112/113 under eCQM/MIPS CQM) are modeled as a
+  labeled two-branch toggle, resolved by research/answers-q1-*.md: CMS judges
+  "no benchmark" at scoring, attempts a performance-period benchmark after
+  submissions close, and in PY2024 succeeded for every benchmark-less required
+  APP measure — so the default branch scores them out of 80. The fallback
+  branch applies exclusion and the § 425.512(a)(7)(ii)(B) 73.85 floor
+  together. Whether an excluded eCQM still earns its COA point is unaddressed
+  by CMS (~65% it does); the lab awards it. The COA cap follows post-exclusion
+  available points and the floor applies after COA, both per CMS text.
 - Data-capture efficiency and Medicare-population shift are labeled modeling
   assumptions with no per-ACO public source. Capture is modeled numerator-side
   only (uncoded care → recorded failure); denominator leakage — patients whose

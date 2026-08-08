@@ -1,6 +1,26 @@
 # Research brief — benchmark-less measures in APP Plus, PY2026
 
-**Status:** open questions. Prepared 2026-08-08 for independent research (internal or external).
+**Status:** ANSWERED 2026-08-08 by three independent research passes — see
+[`answers-q1-benchmarkless-scoring.md`](answers-q1-benchmarkless-scoring.md) (regulatory),
+[`answers-q1-empirical.md`](answers-q1-empirical.md) (what CMS actually did), and
+[`answers-q2-coa.md`](answers-q2-coa.md) (COA). Summary of conclusions:
+
+- **Q1 = (d), a sequence.** "Does not have a benchmark" is judged **at scoring**, not pre-year —
+  CMS's own gloss: measures that "do not have a benchmark *(for example, a historical or
+  performance period benchmark)*" (88 FR 79123). After submissions close CMS attempts a
+  performance-period benchmark; in PY2024 it succeeded for **every** benchmark-less required APP
+  measure. If it succeeds → scored normally, 80-point denominator, no floor (~80% likely per
+  collection type). If it fails → exclusion **and** the 73.85 floor fire **together**.
+- **Q2 unaddressed by CMS** (~65% the COA point accrues on an excluded eCQM). Worth 3.33 pp.
+  But the **cap is computed after exclusions** (6 points at a 60-point denominator, not 8 —
+  90 FR 49813) and the **floor is applied after the COA** (90 FR 49805), so under the exclusion
+  branch the floor moots the question for any ACO below 73.85.
+- **A prior claim of ours was wrong and is withdrawn** — see the correction in premise 3 below.
+
+The original brief follows unchanged (except the marked corrections), since it is the artifact an
+external researcher would work from.
+
+**Prepared** 2026-08-08 for independent research (internal or external).
 **Scope:** Medicare Shared Savings Program (MSSP) ACOs reporting the APP Plus quality measure
 set for **performance year 2026**, submitted to CMS in early 2027. Current law as of August 2026,
 with the CY2027 PFS proposed rule (CMS-1848-P, July 2026) treated as proposed, not final.
@@ -57,10 +77,11 @@ pre-published benchmark, which of the following occurs?
    performance period**"* — i.e. performance-period benchmarks are a lawful mechanism, not a
    courtesy. The 2023 and 2024 QPP benchmark files contain 88 and 85 rows respectively whose
    Benchmark Type is a performance-period benchmark, so the mechanism is in active use.
-3. **§ 425.512(a)(7)(ii)(B)**, verbatim: CMS *"will use the higher of the ACO's health equity
-   adjusted quality performance score or the equivalent of the 40th percentile MIPS Quality
-   performance category score … when … (B) At least one of the required measures in the APP Plus
-   quality measure set does not have a benchmark as described at § 414.1380(b)(1)(i)(A)."* The
+3. **§ 425.512(a)(7)(ii)(B)**: CMS *"will use the higher of the ACO's … quality performance score
+   or the equivalent of the 40th percentile MIPS Quality performance category score … when …
+   (B) At least one of the required measures in the APP Plus quality measure set does not have a
+   benchmark as described at § 414.1380(b)(1)(i)(A)."* (Quoted here as amended — the "health
+   equity adjusted" wording was struck when that adjustment sunset for PY2026, 90 FR 49815.) The
    PY2026 40th-percentile value is **73.85** (CMS QPS memo, derivation 77.73 + 74.54 + 69.27 = 221.54 / 3).
    **CORRECTED 2026-08-08:** an earlier draft of this brief claimed this provision is "real and
    applied" because the PY2024 PUF flags 35 ACOs at exactly 77.05. That attribution was **wrong**.

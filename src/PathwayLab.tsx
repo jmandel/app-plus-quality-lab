@@ -1069,7 +1069,10 @@ export default function AppPlusPathwayLab() {
               per 42 CFR 414.1367(c)(1)(i)); 134 under MIPS CQM is capped at 7 points (dashed red line); 001 counts a
               bad outcome, so lower is better; the Medicare CQM ladders for 001/134/236 are built from real ACO
               submissions — far steeper than the flat bands the pending proposed rule (toggle in Step 3, on by
-              default) restores. Simulate a reporting failure with the Step 3 checkboxes.
+              default) restores. Simulate a reporting failure with the Step 3 checkboxes. One modeled judgment
+              call: an excluded measure still earns its +1 electronic bonus here — CMS has never addressed
+              whether the bonus survives exclusion (its conditions are data completeness and case minimum, neither
+              mentioning benchmarks), and in that branch the 73.85 floor usually moots the difference anyway.
             </Info>
           </Panel>
 
