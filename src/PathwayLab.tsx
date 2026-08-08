@@ -366,6 +366,23 @@ function Info({ summary, children }: { summary: string; children: React.ReactNod
   );
 }
 
+function LossMeter({ actual, max, fixed = false }: { actual: number; max: number; fixed?: boolean }) {
+  const aPct = Math.max(0, Math.min(100, (actual / max) * 100));
+  return (
+    <div style={{ margin: "2px 0" }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3, ...mono }}>
+        <span style={{ fontSize: 10, color: T.inkSoft }}>ACTUAL LOSS RATE</span>
+        <b style={{ fontSize: 20, color: T.debt, lineHeight: 1 }}>{actual.toFixed(actual % 1 ? 1 : 0)}%</b>
+        <span style={{ fontSize: 11, color: T.inkSoft }}>of {max}% max exposure{fixed ? " (fixed)" : ""}</span>
+      </div>
+      <div style={{ display: "flex", height: 12, border: `1px solid ${T.line}`, borderRadius: 3, background: "#fff", overflow: "hidden" }}>
+        <div style={{ width: `${aPct}%`, background: T.debt, opacity: 0.8 }} />
+        {aPct < 100 && <div style={{ flex: 1, background: `repeating-linear-gradient(135deg, rgba(15,118,110,0.25) 0 5px, #ffffff 5px 10px)` }} title="exposure trimmed by the quality score" />}
+      </div>
+    </div>
+  );
+}
+
 interface FinInputs {
   grossPct: number;
   benchmarkM: number;
@@ -574,7 +591,7 @@ interface WaterfallStep {
 }
 
 function Waterfall({ steps, total }: { steps: WaterfallStep[]; total: number }) {
-  const w = 640, h = 260, pad = { l: 34, r: 8, t: 14, b: 24 };
+  const w = 640, h = 190, pad = { l: 34, r: 8, t: 14, b: 24 };
   const plotW = w - pad.l - pad.r, plotH = h - pad.t - pad.b;
   const n = steps.length + 1, colW = plotW / n, barW = Math.min(colW * 0.62, 50);
   const y = (v: number) => pad.t + plotH - (v / AVAILABLE) * plotH;
@@ -1105,15 +1122,13 @@ export default function AppPlusPathwayLab() {
                   </>
                 ) : TRACKS[track].loss === "flat30" ? (
                   <>
-                    <span style={{ fontSize: 10, color: T.inkFaint }}>LOSS RATE</span>
-                    <b style={{ fontSize: 20, lineHeight: 1, color: T.debt }}>30%</b>
-                    <span style={{ color: T.inkFaint }}>fixed — quality changes nothing</span>
+                    <LossMeter actual={30} max={30} fixed />
+                    <span style={{ color: T.inkFaint }}>fixed rate — quality trims nothing in BASIC C–E</span>
                   </>
                 ) : (
                   <>
-                    <span style={{ fontSize: 10, color: T.inkFaint }}>LOSS RATE</span>
-                    <b style={{ fontSize: 20, lineHeight: 1, color: T.debt }}>{fin.lossPct.toFixed(0)}%</b>
-                    <span style={{ color: T.inkFaint }}>quality trims the 75% max exposure ({fmt$(0.75 * Math.abs(fin.gross))}) · protection <b style={{ color: T.money }}>{fmt$((0.75 - fin.lossPct / 100) * Math.abs(fin.gross))}</b> avoided</span>
+                    <LossMeter actual={fin.lossPct} max={75} />
+                    <span style={{ color: T.inkFaint }}>hatched = trimmed by quality: repays <b style={{ color: T.debt }}>{fmt$(Math.abs(fin.losses$))}</b> instead of <b style={{ color: T.debt }}>{fmt$(0.75 * Math.abs(fin.gross))}</b> — <b style={{ color: T.money }}>{fmt$((0.75 - fin.lossPct / 100) * Math.abs(fin.gross))}</b> avoided</span>
                   </>
                 )}
               </div>
