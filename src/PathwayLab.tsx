@@ -345,8 +345,8 @@ function RateMeter({ actual, max }: { actual: number; max: number }) {
   const pct = max > 0 ? Math.max(0, Math.min(100, (actual / max) * 100)) : 0;
   return (
     <div style={{ margin: "2px 0" }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3, ...mono }}>
-        <span style={{ fontSize: 10, color: T.inkSoft }}>ACTUAL SHARING RATE</span>
+      <div style={{ fontSize: 10, color: T.inkSoft, ...mono }}>ACTUAL SHARING RATE</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6, margin: "2px 0 4px", ...mono }}>
         <b style={{ fontSize: 20, color: T.money, lineHeight: 1 }}>{actual.toFixed(actual % 1 ? 1 : 0)}%</b>
         <span style={{ fontSize: 11, color: T.inkSoft }}>of {max}% max</span>
       </div>
@@ -371,8 +371,8 @@ function LossMeter({ actual, max, fixed = false }: { actual: number; max: number
   const aPct = Math.max(0, Math.min(100, (actual / max) * 100));
   return (
     <div style={{ margin: "2px 0" }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3, ...mono }}>
-        <span style={{ fontSize: 10, color: T.inkSoft }}>ACTUAL LOSS RATE</span>
+      <div style={{ fontSize: 10, color: T.inkSoft, ...mono }}>ACTUAL LOSS RATE</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6, margin: "2px 0 4px", ...mono }}>
         <b style={{ fontSize: 20, color: T.debt, lineHeight: 1 }}>{actual.toFixed(actual % 1 ? 1 : 0)}%</b>
         <span style={{ fontSize: 11, color: T.inkSoft }}>of {max}% max exposure{fixed ? " (fixed)" : ""}</span>
       </div>
@@ -474,7 +474,7 @@ function Panel({ children, title, tag, style }: { children?: React.ReactNode; ti
     </div>
   );
 }
-function ThresholdStrip({ value, threshold, flagLabel, markerColor = T.ink, dimmed = false, height = 62 }: { value: number; threshold: number; flagLabel: string; markerColor?: string; dimmed?: boolean; height?: number }) {
+function ThresholdStrip({ value, threshold, flagLabel, markerColor = T.ink, dimmed = false, height = 54 }: { value: number; threshold: number; flagLabel: string; markerColor?: string; dimmed?: boolean; height?: number }) {
   const w = 260, h = height, ph = h - 13;
   const x = (v: number) => 8 + (Math.max(0, Math.min(100, v)) / 100) * (w - 16);
   return (
@@ -567,7 +567,7 @@ function Station({ row, gate, onRoute, onRate }: { row: MeasureRow; gate: boolea
         </div>
       </div>
       <PinRow pins={RATE_PINS[row.id]} cur={row.underlying} onPick={(v) => onRate(row.id, v)} fmt={(v) => `${v}`} />
-      <div style={{ display: "flex", gap: 4, ...mono, fontSize: 9.5, height: 20, alignItems: "center" }}>
+      {(row.coa > 0 || (row.pathway === "ecqm" && row.pts === 10 && gate)) && <div style={{ display: "flex", gap: 4, ...mono, fontSize: 9.5, height: 20, alignItems: "center" }}>
         {row.coa > 0 && (
           <span style={{
             borderRadius: 2, padding: "1px 6px", border: `1px solid ${CT.ecqm.color}`, color: CT.ecqm.color, fontWeight: 600,
@@ -575,7 +575,7 @@ function Station({ row, gate, onRoute, onRate }: { row: MeasureRow; gate: boolea
           }}>+1 COA</span>
         )}
         {row.pathway === "ecqm" && row.pts === 10 && gate && <span style={{ borderRadius: 2, padding: "1px 6px", border: `1px solid ${T.line}`, color: T.inkFaint, textDecoration: "line-through" }}>COA capped</span>}
-      </div>
+      </div>}
     </div>
   );
 }
@@ -599,7 +599,7 @@ function Waterfall({ steps, total }: { steps: WaterfallStep[]; total: number }) 
   let cum = 0;
   const cols = steps.map((s, i) => {
     const y0 = y(cum), y1 = y(cum + s.pts);
-    const col = { ...s, i, x: pad.l + i * colW + (colW - barW) / 2, yTop: Math.min(y0, y1), hgt: Math.max(Math.abs(y0 - y1), s.pts > 0 ? 2 : 0), connY: y(cum + s.pts) };
+    const col = { ...s, i, start: cum, x: pad.l + i * colW + (colW - barW) / 2, yTop: Math.min(y0, y1), hgt: Math.max(Math.abs(y0 - y1), s.pts > 0 ? 2 : 0), connY: y(cum + s.pts) };
     cum += s.pts;
     return col;
   });
@@ -618,10 +618,18 @@ function Waterfall({ steps, total }: { steps: WaterfallStep[]; total: number }) 
               <defs><pattern id={`pl-${c.key}`} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#fff" /><rect width="3.2" height="6" fill={c.color} /></pattern></defs>
               <rect x={c.x} y={c.yTop} width={barW} height={c.hgt} fill={`url(#pl-${c.key})`} stroke={c.color} strokeWidth="1" />
             </>
+          ) : c.pts === 0 ? (
+            <rect x={c.x} y={c.yTop} width={barW} height={c.hgt} fill="#fff" stroke={T.fail} strokeWidth="1.5" strokeDasharray="3 2" />
           ) : (
-            <rect x={c.x} y={c.yTop} width={barW} height={c.hgt}
-              fill={c.pts === 0 ? "#fff" : c.color} opacity={c.kind === "fixed" ? 0.65 : 0.9}
-              stroke={c.pts === 0 ? T.fail : c.color} strokeWidth={c.pts === 0 ? 1.5 : 1} strokeDasharray={c.pts === 0 ? "3 2" : "none"} />
+            // One rung per point, echoing the benchmark ladders' banded idiom and opacity ramp.
+            <g>
+              {Array.from({ length: Math.round(c.pts) }, (_, ri) => (
+                <rect key={ri} x={c.x} y={y(c.start + ri + 1)} width={barW}
+                  height={Math.max(y(c.start + ri) - y(c.start + ri + 1) - 0.5, 0.8)}
+                  fill={c.color} opacity={(c.kind === "fixed" ? 0.3 : 0.45) + 0.05 * Math.min(ri + 1, 10)}
+                  stroke={c.color} strokeWidth="0.4" />
+              ))}
+            </g>
           )}
           <line x1={c.x + barW} x2={c.x + colW} y1={c.connY} y2={c.connY} stroke={T.inkFaint} strokeWidth="1" strokeDasharray="2 2" />
           <text x={c.x + barW / 2} y={c.yTop - 3} fontSize="8.5" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fill={c.pts === 0 ? T.fail : T.inkSoft}>{c.pts === 0 ? "0!" : `+${c.pts}`}</text>
@@ -1018,7 +1026,7 @@ export default function AppPlusPathwayLab() {
           <div className="lab-out" ref={outRef}>
 
           {/* stations */}
-          <Panel title="The five reported measures — each scored against its method's real benchmark" tag="taller rung = wider scoring band" style={{ marginBottom: 12 }}>
+          <Panel style={{ marginBottom: 12 }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(205px, 1fr))", gap: 8 }}>
               {mach.rows.map((r) => (
                 <Station key={r.id} row={r} gate={gates[r.id]}
@@ -1026,11 +1034,9 @@ export default function AppPlusPathwayLab() {
                   onRate={(id, v) => setRates({ ...rates, [id]: v })} />
               ))}
             </div>
-            <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "8px 0 0", lineHeight: 1.5 }}>
-              The ladder is the chosen method's real 2026 benchmark (hover a rung for its cutpoints); the "care"
-              slider is the ACO's true rate, and "measured" is where it lands after Step 3 adjustments.
-            </p>
-            <Info summary="chip provenance · 2026 quirks">
+            <Info summary="reading the cards · 2026 quirks">
+              Each ladder is the method's real 2026 benchmark — hover a rung for its cutpoints; taller rung = wider
+              scoring band; "measured" is the care slider after the Step 3 adjustments.{" "}
               Care-rate chips jump to registry-reported percentiles — real chart-review rates with no capture loss
               (001/134/236: CMS's 2026 Medicare CQM tables from actual ACO submissions; 112/113: the 2025 MIPS CQM
               file; 001's percentiles are of performance, so lower is better). Quirks: 112/113 have no published 2026
@@ -1048,34 +1054,30 @@ export default function AppPlusPathwayLab() {
             <Panel title="How the points add up" tag={`score ${mach.q.toFixed(1)}% = ${mach.total} of ${mach.available} pts`}>
               <Waterfall steps={steps} total={mach.total} />
               <p style={{ fontSize: 10, color: T.inkFaint, margin: "6px 0 0" }}>
-                Each bar adds one measure's points. "COA" (striped) is a bonus point per electronically-reported
-                measure. "FIXT" (gray) is the survey and claims measures CMS scores itself. Total ÷ {mach.available} = the score.
+                One bar per measure; COA = electronic bonus point; FIXT = CMS-scored survey + claims. Total ÷ {mach.available} = the score.
               </p>
             </Panel>
             <Panel title="Does the ACO pass the quality standard?" tag="two routes — either one passes on its own">
-              <div style={{ border: `1.5px solid ${mach.deemed ? T.pass : T.line}`, background: mach.deemed ? "rgba(22,163,74,0.06)" : "#fff", borderRadius: 4, padding: "8px 10px", marginBottom: 8 }}>
+              <div style={{ border: `1.5px solid ${mach.deemed ? T.pass : T.line}`, background: mach.deemed ? "rgba(22,163,74,0.06)" : "#fff", borderRadius: 4, padding: "6px 10px", marginBottom: 6, opacity: mach.status === "MET" ? 0.55 : 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 10, ...mono, marginBottom: 6 }}>
                   <span style={{ color: T.inkSoft }}>ROUTE A · DEEMED — the eCQM/MIPS CQM reporting incentive</span>
-                  <b style={{ color: mach.deemed ? T.pass : T.fail, whiteSpace: "nowrap" }}>{mach.deemed ? "ALL 4 MET ✓" : `${deemLit}/4 MET`}</b>
+                  <b style={{ color: mach.status === "MET" ? T.inkFaint : mach.deemed ? T.pass : T.fail, whiteSpace: "nowrap" }}>{mach.deemed ? "ALL 4 MET ✓" : mach.status === "MET" ? `NOT NEEDED · ${deemLit}/4` : `${deemLit}/4 MET`}</b>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                  <StatusLamp on={mach.allFull} label="All five measures reported via an all-patient method (eCQM or MIPS CQM)" />
-                  <StatusLamp on={mach.allGates} label="Every measure met the minimum reporting requirements" />
-                  <StatusLamp on={mach.outcomeOK} label="At least one outcome measure (001, 236, or a claims outcome measure) beat the bottom 10%" />
-                  <StatusLamp on={mach.otherOK} label="At least one of the remaining seven measures (incl. CAHPS + claims) reached the 40th percentile" />
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <StatusLamp on={mach.allFull} label="All five measures via an all-patient method (eCQM / MIPS CQM)" />
+                  <StatusLamp on={mach.allGates} label="Every measure met reporting minimums" />
+                  <StatusLamp on={mach.outcomeOK} label="An outcome measure (001, 236, or claims) beat the bottom 10%" />
+                  <StatusLamp on={mach.otherOK} label="Another of the remaining seven (incl. CAHPS + claims) hit the 40th percentile" />
                 </div>
-                <p style={{ fontSize: 9.5, color: T.inkFaint, margin: "6px 0 0", lineHeight: 1.4 }}>
-                  Meet all four and the ACO is deemed to meet the standard — the score below isn't consulted.
-                </p>
               </div>
-              <div style={{ border: `1.5px solid ${mach.deemed ? T.line : mach.q >= QPS ? T.pass : T.fail}`, background: "#fff", borderRadius: 4, padding: "8px 10px", opacity: mach.deemed ? 0.55 : 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 10, ...mono, marginBottom: mach.deemed ? 0 : 4 }}>
+              <div style={{ border: `1.5px solid ${mach.deemed ? T.line : mach.q >= QPS ? T.pass : T.fail}`, background: "#fff", borderRadius: 4, padding: "6px 10px", opacity: mach.deemed ? 0.55 : 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 10, ...mono, marginBottom: 3 }}>
                   <span style={{ color: T.inkSoft }}>ROUTE B · PASS BY SCORE — beat the national 40th percentile</span>
                   <b style={{ color: mach.deemed ? T.inkFaint : mach.q >= QPS ? T.pass : T.fail, whiteSpace: "nowrap" }}>
-                    {mach.deemed ? `NOT CONSULTED · score ${mach.q.toFixed(1)} vs ${QPS}` : `${mach.q.toFixed(1)} ${mach.q >= QPS ? "≥" : "<"} ${QPS}`}
+                    {mach.deemed ? `NOT CONSULTED · ${mach.q.toFixed(1)} vs ${QPS}` : `${mach.q.toFixed(1)} ${mach.q >= QPS ? "≥" : "<"} ${QPS}`}
                   </b>
                 </div>
-                {!mach.deemed && <ThresholdStrip value={mach.q} threshold={QPS} flagLabel="passing bar 73.85 (real '26)" />}
+                <ThresholdStrip value={mach.q} threshold={QPS} flagLabel="passing bar 73.85 (real '26)" dimmed={mach.deemed} />
                 {!mach.deemed && mach.q < QPS && (
                   <p style={{ fontSize: 9.5, color: T.inkFaint, margin: "4px 0 0", lineHeight: 1.4 }}>
                     Below the bar with no automatic pass: if an outcome measure still beat the bottom 10%, the ACO
@@ -1172,8 +1174,8 @@ export default function AppPlusPathwayLab() {
               </table>
             </div>
             <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "8px 0 0", lineHeight: 1.5 }}>
-              Every row is the same ACO delivering the same care — only the reporting strategy changes. Superscripts
-              mark mixed-row methods: E = eCQM, R = MIPS CQM, C = Medicare CQM, X = Medicare eCQM.
+              Same ACO, same care in every row — only the reporting strategy changes (superscripts: E / R / C / X =
+              eCQM / MIPS CQM / Medicare CQM / Medicare eCQM).
             </p>
             <Info summary="how the explored mix works · why dollars tie">
               "As configured above" mirrors your current choices and gate toggles; other rows assume every measure
