@@ -150,7 +150,7 @@ interface Scenario {
   story: string;
   rates: Rates;
   fixedPts: FixedPts;
-  benchmarkM: number;
+  perCap: number;
   grossPct: number;
   track: TrackKey;
   benes: number;
@@ -163,21 +163,21 @@ const SCENARIOS: Record<ScenarioKey, Scenario> = {
     story: "An integrated health system ACO: 24,000 assigned Medicare patients (75th percentile of real 2024 ACOs), a few large consolidated practice groups, an experienced quality team, and spending 7.0% under its cost benchmark — a 75th-percentile 2024 financial result. It's in the ENHANCED track: two-sided risk, savings shared at up to 75%, and loss repayment scaled by the quality score. Its clinical performance is strong on every measure; the open question is which reporting method turns that performance into the most points and dollars.",
     rates: { "001": 17, "134": 76, "236": 79, "112": 77, "113": 73 },
     fixedPts: { cahps: 7, claims1: 6, claims2: 7 },
-    benchmarkM: 330, grossPct: 7.0, track: "enhanced", benes: 24000, msrElect: 0,
+    perCap: 13750, grossPct: 7.0, track: "enhanced", benes: 24000, msrElect: 0,
   },
   middle: {
     key: "middle", name: "Middle-of-the-road regional",
     story: "A regional ACO built to match the median real 2024 ACO: 13,000 assigned patients, 19 practice groups on four different electronic health records, spending 4.2% under benchmark. It's in BASIC Level B: one-sided (no loss repayment), savings shared at up to 40% once it beats its ~2.8% minimum savings rate. Average clinical performance. Note how measure 134 (depression screening) scores very differently by method — a 64% rate lands low on the MIPS CQM ladder (practices reporting that way average 86%) but mid-to-high on the electronic ladder — while measure 236 (blood pressure) runs the opposite direction.",
     rates: { "001": 24, "134": 64, "236": 72, "112": 69, "113": 66 },
     fixedPts: { cahps: 6, claims1: 5, claims2: 6 },
-    benchmarkM: 177, grossPct: 4.2, track: "basicB", benes: 13000,
+    perCap: 13600, grossPct: 4.2, track: "basicB", benes: 13000,
   },
   safetynet: {
     key: "safetynet", name: "Safety-net / rural network",
     story: "A safety-net ACO: 8,000 assigned patients (25th percentile) across 24 small independent practices, and it spent 0.5% more than its cost benchmark — a bottom-decile 2024 financial result. Its one-sided BASIC Level A track means it repays nothing back — but it also shares nothing until savings beat its ~3.2% minimum savings rate, so the quality standard gates only potential upside here. (A two-sided track would repay: a flat 30% in BASIC C–E regardless of quality; quality-scaled in ENHANCED.)",
     rates: { "001": 33, "134": 52, "236": 63, "112": 56, "113": 49 },
     fixedPts: { cahps: 5, claims1: 4, claims2: 5 },
-    benchmarkM: 95, grossPct: -0.5, track: "basicA", benes: 8000,
+    perCap: 11900, grossPct: -0.5, track: "basicA", benes: 8000,
   },
 };
 
@@ -293,7 +293,7 @@ const RATE_PINS: Record<MeasureId, Pin[]> = {
   "112": [{ p: "p10", v: 30 }, { p: "p30", v: 58 }, { p: "p50", v: 76 }, { p: "p70", v: 88 }, { p: "p90", v: 95 }],
   "113": [{ p: "p10", v: 26 }, { p: "p30", v: 65 }, { p: "p50", v: 79 }, { p: "p70", v: 89 }, { p: "p90", v: 95 }],
 };
-const BENCH_PINS: Pin[] = [{ p: "p10", v: 76 }, { p: "p25", v: 106 }, { p: "p50", v: 177 }, { p: "p75", v: 331 }, { p: "p90", v: 604 }];
+const PERCAP_PINS: Pin[] = [{ p: "p10", v: 11500 }, { p: "p25", v: 12100 }, { p: "p50", v: 13300 }, { p: "p75", v: 14500 }, { p: "p90", v: 16000 }];
 const GROSS_PINS: Pin[] = [{ p: "p10", v: -0.4 }, { p: "p25", v: 2.0 }, { p: "p50", v: 4.2 }, { p: "p75", v: 7.0 }, { p: "p90", v: 10.4 }];
 const CAPTURE_PINS: Pin[] = [{ p: "low", v: 75 }, { p: "default", v: 85 }, { p: "top-rung", v: 93 }, { p: "perfect", v: 100 }];
 const BENE_PINS: Pin[] = [{ p: "p10", v: 5900 }, { p: "p25", v: 8300 }, { p: "p50", v: 13200 }, { p: "p75", v: 24400 }, { p: "p90", v: 44100 }];
@@ -639,7 +639,7 @@ export default function AppPlusPathwayLab() {
   const [capture, setCapture] = useState(0.85);
   const [grossPct, setGrossPct] = useState(s0.grossPct);
   const [proposedFlat, setProposedFlat] = useState(true);
-  const [benchmarkM, setBenchmarkM] = useState(s0.benchmarkM);
+  const [perCap, setPerCap] = useState(s0.perCap);
   const [track, setTrack] = useState<TrackKey>(s0.track);
   const [benes, setBenes] = useState(s0.benes);
   const [msrElect, setMsrElect] = useState<number | "scale">(s0.msrElect ?? "scale");
@@ -648,17 +648,18 @@ export default function AppPlusPathwayLab() {
   const load = (key: ScenarioKey) => {
     const s = SCENARIOS[key];
     setScenario(key); setRates({ ...s.rates }); setGrossPct(s.grossPct);
-    setBenchmarkM(s.benchmarkM); setTrack(s.track); setBenes(s.benes); setMsrElect(s.msrElect ?? "scale");
+    setPerCap(s.perCap); setTrack(s.track); setBenes(s.benes); setMsrElect(s.msrElect ?? "scale");
     setGates({ "001": true, "134": true, "236": true, "112": true, "113": true });
   };
   // Presets expose their implied data: once any scenario-derived input deviates, Step 1 shows Custom.
   const isCustom = MEASURES.some((m) => rates[m.id] !== scen.rates[m.id])
-    || benchmarkM !== scen.benchmarkM || Math.abs(grossPct - scen.grossPct) > 1e-9
+    || perCap !== scen.perCap || Math.abs(grossPct - scen.grossPct) > 1e-9
     || track !== scen.track || benes !== scen.benes || msrElect !== (scen.msrElect ?? "scale");
   // MSR is set by rule, not freely chosen: mandatory sliding scale for one-sided BASIC;
   // an elected 0/0.5/1/2% (or the scale) for two-sided tracks.
   const oneSided = TRACKS[track].loss === "none";
   const msr = oneSided || msrElect === "scale" ? slidingMsr(benes) : msrElect;
+  const benchmarkM = Math.round((benes * perCap) / 1e6);
   const routeAll = (k: PathwayId) => setRouting({ "001": k, "134": k, "236": k, "112": k, "113": k });
   const allSame = PATHWAYS.find((k) => MEASURES.every((m) => routing[m.id] === k));
 
@@ -720,13 +721,22 @@ export default function AppPlusPathwayLab() {
   // scrolls 1:1 with the page until its bottom edge pins to the viewport bottom — settlement
   // and compare stay reachable through the whole input scroll, with no inner scrollbar.
   const outRef = useRef<HTMLDivElement>(null);
+  const inRef = useRef<HTMLDivElement>(null);
   const step2Ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = outRef.current;
     if (!el) return;
     const set = () => {
-      const minTop = Math.min(10, window.innerHeight - el.offsetHeight - 10);
+      const h = el.offsetHeight;
       const lock = step2Ref.current ? step2Ref.current.getBoundingClientRect().top + window.scrollY - 10 : 0;
+      // The sticky containing block (the grid row) must reach past the pinned phase, or the
+      // browser force-releases the pin at the container bottom before Step 2 tops out.
+      const inEl = inRef.current;
+      if (inEl) {
+        const inTop = inEl.getBoundingClientRect().top + window.scrollY;
+        inEl.style.minHeight = `${Math.max(0, lock + 20 + h - inTop)}px`;
+      }
+      const minTop = Math.min(10, window.innerHeight - h - 10);
       el.style.top = `${Math.max(minTop, 10 - Math.max(0, window.scrollY - lock))}px`;
     };
     set();
@@ -770,7 +780,7 @@ export default function AppPlusPathwayLab() {
 
           {/* wide screens: inputs (steps + measure cards) left, outputs (score + dollars) right */}
           <div className="lab-cols">
-          <div className="lab-in">
+          <div className="lab-in" ref={inRef}>
 
           {/* scenario + master switch */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))", gap: 12, marginBottom: 12 }}>
@@ -888,17 +898,24 @@ export default function AppPlusPathwayLab() {
               </div>
               <div>
                 <div style={{ fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 6, minHeight: 16 }}>ORGANIZATION (this ACO)</div>
-                {[
-                  { label: "cost benchmark", val: benchmarkM, set: setBenchmarkM, min: 40, max: 650, step: 5, fmt: (v: number) => `$${v}M` },
-                ].map((s) => (
-                  <label key={s.label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, ...mono, color: T.inkSoft, marginBottom: 5 }}>
-                    <span style={{ width: 100, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</span>
-                    <input type="range" min={s.min} max={s.max} step={s.step} value={s.val} onChange={(e) => s.set(+e.target.value)} style={{ flex: 1, accentColor: T.ink }} aria-label={s.label} />
-                    <b style={{ width: 56, color: T.ink, whiteSpace: "nowrap", textAlign: "right" }}>{s.fmt(s.val)}</b>
-                  </label>
-                ))}
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, ...mono, color: T.inkSoft, marginBottom: 5 }}>
+                  <span style={{ width: 100, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>beneficiaries</span>
+                  <input type="range" min={5000} max={60000} step={250} value={benes} onChange={(e) => setBenes(+e.target.value)} style={{ flex: 1, accentColor: T.ink }} aria-label="assigned beneficiaries" />
+                  <b style={{ width: 56, color: T.ink, whiteSpace: "nowrap", textAlign: "right" }}>{(benes / 1000).toFixed(1)}k</b>
+                </label>
                 <div style={{ margin: "0 0 3px" }}>
-                  <PinRow pins={BENCH_PINS} cur={benchmarkM} onPick={setBenchmarkM} fmt={(v) => `$${v}M`} />
+                  <PinRow pins={BENE_PINS} cur={benes} onPick={setBenes} fmt={(v) => `${(v / 1000).toFixed(1)}k`} />
+                </div>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, ...mono, color: T.inkSoft, margin: "7px 0 5px" }}>
+                  <span style={{ width: 100, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>$ per beneficiary</span>
+                  <input type="range" min={10000} max={17000} step={100} value={perCap} onChange={(e) => setPerCap(+e.target.value)} style={{ flex: 1, accentColor: T.ink }} aria-label="benchmark dollars per beneficiary" />
+                  <b style={{ width: 56, color: T.ink, whiteSpace: "nowrap", textAlign: "right" }}>${(perCap / 1000).toFixed(1)}k</b>
+                </label>
+                <div style={{ margin: "0 0 3px" }}>
+                  <PinRow pins={PERCAP_PINS} cur={perCap} onPick={setPerCap} fmt={(v) => `$${(v / 1000).toFixed(1)}k`} />
+                </div>
+                <div style={{ margin: "6px 0 3px", fontSize: 10, ...mono, color: T.inkSoft }}>
+                  COST BENCHMARK: {(benes / 1000).toFixed(1)}k × ${(perCap / 1000).toFixed(1)}k = <b style={{ color: T.ink }}>${benchmarkM}M</b>
                 </div>
                 <div style={{ margin: "8px 0 3px", fontSize: 10, ...mono, color: T.inkSoft }}>TRACK</div>
                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
@@ -911,14 +928,6 @@ export default function AppPlusPathwayLab() {
                       {TRACKS[k].label.replace(" (one-sided)", "")}
                     </button>
                   ))}
-                </div>
-                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, ...mono, color: T.inkSoft, margin: "7px 0 0" }}>
-                  <span style={{ width: 100, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>beneficiaries</span>
-                  <input type="range" min={5000} max={60000} step={250} value={benes} onChange={(e) => setBenes(+e.target.value)} style={{ flex: 1, accentColor: T.ink }} aria-label="assigned beneficiaries" />
-                  <b style={{ width: 56, color: T.ink, whiteSpace: "nowrap", textAlign: "right" }}>{(benes / 1000).toFixed(1)}k</b>
-                </label>
-                <div style={{ margin: "2px 0 3px" }}>
-                  <PinRow pins={BENE_PINS} cur={benes} onPick={setBenes} fmt={(v) => `${(v / 1000).toFixed(1)}k`} />
                 </div>
                 <div style={{ margin: "6px 0 3px", fontSize: 10, ...mono, color: T.inkSoft, cursor: "help" }}
                   title="Set by regulation, not chosen freely: one-sided BASIC ACOs get a mandatory sliding-scale MSR by assigned beneficiaries (42 CFR 425.605(b)(1)); two-sided tracks elect 0/0.5/1/2% or the scale — symmetric with their minimum loss rate.">
