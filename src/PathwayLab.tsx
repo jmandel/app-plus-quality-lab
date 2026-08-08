@@ -561,7 +561,7 @@ function Station({ row, gate, onRoute, onRate }: { row: MeasureRow; gate: boolea
           <span style={line}>measured ({ct.label.replace("Medicare ", "M-")}): <b style={{ color: ct.color }}>{row.measured.toFixed(1)}%</b></span>
           <span style={{ ...line, cursor: "help" }} title={benchBadge(row.bench).why}>{benchBadge(row.bench).label}{row.bench.topped ? " · 7-pt cap" : ""}</span>
           <span style={line}>{row.excluded
-            ? <>est. decile <b style={{ color: T.ink }}>{row.decile}</b> — <b style={{ color: T.fail }}>excluded from score</b></>
+            ? <>est. decile <b style={{ color: T.ink }}>{row.decile}</b> — <b style={{ color: "#D97706" }}>excluded from score</b></>
             : <>decile <b style={{ color: T.ink }}>{row.decile}</b>{row.capped ? ` → capped @7` : ""} = <b style={{ color: gate ? T.ink : T.fail }}>{row.pts} pts</b></>}</span>
           {!gate && <span style={{ ...line, color: T.fail, fontWeight: 700 }}>REPORTING FAILURE — scored 0</span>}
         </div>
@@ -589,9 +589,10 @@ interface WaterfallStep {
   color: string;
   pattern?: string;
   kind?: string;
+  excluded?: boolean;
 }
 
-function Waterfall({ steps, total }: { steps: WaterfallStep[]; total: number }) {
+function Waterfall({ steps, total, available }: { steps: WaterfallStep[]; total: number; available: number }) {
   const w = 640, h = 190, pad = { l: 34, r: 8, t: 14, b: 24 };
   const plotW = w - pad.l - pad.r, plotH = h - pad.t - pad.b;
   const n = steps.length + 1, colW = plotW / n, barW = Math.min(colW * 0.62, 50);
@@ -618,6 +619,8 @@ function Waterfall({ steps, total }: { steps: WaterfallStep[]; total: number }) 
               <defs><pattern id={`pl-${c.key}`} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#fff" /><rect width="3.2" height="6" fill={c.color} /></pattern></defs>
               <rect x={c.x} y={c.yTop} width={barW} height={c.hgt} fill={`url(#pl-${c.key})`} stroke={c.color} strokeWidth="1" />
             </>
+          ) : c.excluded ? (
+            <rect x={c.x} y={y(0) - 7} width={barW} height={7} fill="#fff" stroke={T.grayed} strokeWidth="1" strokeDasharray="3 2" />
           ) : c.pts === 0 ? (
             <rect x={c.x} y={c.yTop} width={barW} height={c.hgt} fill="#fff" stroke={T.fail} strokeWidth="1.5" strokeDasharray="3 2" />
           ) : (
@@ -632,13 +635,13 @@ function Waterfall({ steps, total }: { steps: WaterfallStep[]; total: number }) 
             </g>
           )}
           <line x1={c.x + barW} x2={c.x + colW} y1={c.connY} y2={c.connY} stroke={T.inkFaint} strokeWidth="1" strokeDasharray="2 2" />
-          <text x={c.x + barW / 2} y={c.yTop - 3} fontSize="8.5" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fill={c.pts === 0 ? T.fail : T.inkSoft}>{c.pts === 0 ? "0!" : `+${c.pts}`}</text>
+          <text x={c.x + barW / 2} y={c.excluded ? y(0) - 11 : c.yTop - 3} fontSize="8.5" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fill={c.excluded ? T.inkFaint : c.pts === 0 ? T.fail : T.inkSoft}>{c.excluded ? "excl." : c.pts === 0 ? "0!" : `+${c.pts}`}</text>
           <text x={c.x + barW / 2} y={h - 12} fontSize="8.5" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fill={T.inkSoft}>{c.label}</text>
         </g>
       ))}
       <g>
         <rect x={pad.l + steps.length * colW + (colW - barW) / 2} y={y(total)} width={barW} height={y(0) - y(total)} fill={T.ink} opacity="0.88" />
-        <text x={pad.l + steps.length * colW + colW / 2} y={y(total) - 4} fontSize="9.5" fontWeight="700" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fill={T.ink}>{total}/80</text>
+        <text x={pad.l + steps.length * colW + colW / 2} y={y(total) - 4} fontSize="9.5" fontWeight="700" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fill={T.ink}>{total}/{available}</text>
         <text x={pad.l + steps.length * colW + colW / 2} y={h - 12} fontSize="8.5" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fill={T.ink}>TOTAL</text>
       </g>
     </svg>
@@ -736,7 +739,7 @@ export default function AppPlusPathwayLab() {
   const isBestApplied = MEASURES.every((m) => routing[m.id] === bestRouting[m.id]);
 
   const steps: WaterfallStep[] = [
-    ...mach.rows.map((r) => ({ key: r.id, label: r.id, pts: r.pts, color: CT[r.pathway].color })),
+    ...mach.rows.map((r) => ({ key: r.id, label: r.id, pts: r.pts, color: CT[r.pathway].color, excluded: r.excluded })),
     ...(mach.coa > 0 ? [{ key: "coa", label: "COA", pts: mach.coa, color: CT.ecqm.color, pattern: "stripe" }] : []),
     { key: "fixt", label: "FIXT", pts: mach.fixed, color: T.fixed, kind: "fixed" },
   ];
@@ -1052,7 +1055,7 @@ export default function AppPlusPathwayLab() {
           {/* waterfall + rails */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))", gap: 12, marginBottom: 12, alignItems: "start" }}>
             <Panel title="How the points add up" tag={`score ${mach.q.toFixed(1)}% = ${mach.total} of ${mach.available} pts`}>
-              <Waterfall steps={steps} total={mach.total} />
+              <Waterfall steps={steps} total={mach.total} available={mach.available} />
               <p style={{ fontSize: 10, color: T.inkFaint, margin: "6px 0 0" }}>
                 One bar per measure; COA = electronic bonus point; FIXT = CMS-scored survey + claims. Total ÷ {mach.available} = the score.
               </p>
