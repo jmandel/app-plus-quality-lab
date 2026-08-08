@@ -837,12 +837,14 @@ export default function AppPlusPathwayLab() {
                 </p>
                 <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "3px 0 0", lineHeight: 1.45 }}>
                   Electronic (eCQM) reporting is computed by the EHR over every eligible patient, all payers — there
-                  is no picking who to report. What varies is proof: care counts only if it exists as conforming
-                  structured data (coded labs, vitals, screenings). The slider is the share of truly-delivered care
-                  captured that way; the rest is reported as failures — the denominator doesn't shrink. (Measure 001
-                  counts a bad outcome, and its spec counts a missing result as poor control, so capture gaps push its
-                  rate up.) CMS's easier electronic benchmarks reflect the same tax nationally. A collapse severe
-                  enough to break the 75% completeness rule is the separate "reporting failure" checkbox below.
+                  is no picking who to report, and both sides of the measure run on structured data. The slider
+                  models the numerator side: care counts only as conforming coded proof (labs, vitals, screenings),
+                  so truly-delivered but uncoded care is reported as failure. (001's spec counts a missing result as
+                  poor control, so capture gaps push its rate up.) The denominator side isn't modeled: a patient
+                  whose diagnosis or encounters never get coded vanishes from the measure entirely — an effect that
+                  cuts both ways and often flatters the rate, since invisible patients skew toward the unscreened and
+                  uncontrolled. CMS's easier electronic benchmarks bake in both effects nationally. A collapse
+                  breaking the 75% completeness rule is the separate "reporting failure" checkbox below.
                 </p>
               </div>
               <div>

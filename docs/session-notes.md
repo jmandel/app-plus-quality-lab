@@ -154,7 +154,10 @@ per-clinician QP status and billing arrangements with no public data source.
   If it fires, ACOs routing 112/113 to eCQM/MIPS CQM would be floored at the
   40th percentile rather than losing points — the opposite of a penalty.
 - Data-capture efficiency and Medicare-population shift are labeled modeling
-  assumptions with no per-ACO public source.
+  assumptions with no per-ACO public source. Capture is modeled numerator-side
+  only (uncoded care → recorded failure); denominator leakage — patients whose
+  coded eligibility is missing vanish from the measure entirely, often
+  flattering the rate — is real but unmodeled.
 - Deterministic model: known deciles, no score uncertainty — which prices
   deeming's insurance/option value at zero. Natural next step: add rate
   uncertainty and show probability-of-passing per strategy.
