@@ -707,6 +707,7 @@ export default function AppPlusPathwayLab() {
         .lab-cols{display:flex;flex-direction:column}
         @media (min-width:1240px){
           .lab-cols{display:grid;grid-template-columns:minmax(400px,470px) minmax(0,1fr);gap:14px;align-items:start}
+          .lab-out{position:sticky;top:10px}
         }
         table.cmp{border-collapse:collapse;width:100%}
         table.cmp th,table.cmp td{border:1px solid ${T.line};padding:4px 7px;font-size:10.5px;text-align:right}
