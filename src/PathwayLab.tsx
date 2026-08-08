@@ -560,7 +560,7 @@ interface WaterfallStep {
 }
 
 function Waterfall({ steps, total }: { steps: WaterfallStep[]; total: number }) {
-  const w = 640, h = 170, pad = { l: 34, r: 8, t: 14, b: 24 };
+  const w = 640, h = 320, pad = { l: 34, r: 8, t: 14, b: 24 };
   const plotW = w - pad.l - pad.r, plotH = h - pad.t - pad.b;
   const n = steps.length + 1, colW = plotW / n, barW = Math.min(colW * 0.62, 50);
   const y = (v: number) => pad.t + plotH - (v / AVAILABLE) * plotH;
@@ -707,7 +707,6 @@ export default function AppPlusPathwayLab() {
         .lab-cols{display:flex;flex-direction:column}
         @media (min-width:1240px){
           .lab-cols{display:grid;grid-template-columns:minmax(400px,470px) minmax(0,1fr);gap:14px;align-items:start}
-          .lab-out{position:sticky;top:10px;max-height:calc(100vh - 20px);overflow-y:auto;padding-right:2px}
         }
         table.cmp{border-collapse:collapse;width:100%}
         table.cmp th,table.cmp td{border:1px solid ${T.line};padding:4px 7px;font-size:10.5px;text-align:right}
@@ -718,21 +717,14 @@ export default function AppPlusPathwayLab() {
         <div style={{ padding: "26px 20px 60px" }}>
 
           {/* title block */}
-          <div style={{ border: `2px solid ${T.ink}`, background: T.film, borderRadius: 4, display: "flex", flexWrap: "wrap", marginBottom: 18 }}>
-            <div style={{ padding: "14px 20px", flex: "1 1 380px", borderRight: `1px solid ${T.line}` }}>
-              <h1 style={{ margin: "0 0 6px", fontSize: 25, fontWeight: 700, lineHeight: 1.15 }}>ACO Quality Reporting Calculator</h1>
-              <p style={{ margin: 0, fontSize: 13, color: T.inkSoft, maxWidth: 640, lineHeight: 1.55 }}>
-                Medicare Shared Savings Program ACOs report five quality measures and choose a reporting method for
-                each. The same care scores differently — and pays differently — depending on the method's benchmark
-                table and bonuses. Everything here uses CMS's actual <b>2026</b> tables (care year 2026, reported
-                early 2027). Pick an example ACO, choose methods, adjust inputs.
-              </p>
-            </div>
-            <div style={{ padding: "14px 20px", ...mono, fontSize: 10, color: T.inkSoft, display: "flex", flexDirection: "column", gap: 3, justifyContent: "center" }}>
-              <span>BENCHMARK TABLES: CMS 2026 (ACTUAL, WHERE PUBLISHED)</span>
-              <span>DATA-CAPTURE MODEL: ADJUSTABLE ASSUMPTIONS</span>
-              <span>DOLLAR FIGURES: SIMPLIFIED ESTIMATES</span>
-            </div>
+          <div style={{ border: `2px solid ${T.ink}`, background: T.film, borderRadius: 4, padding: "12px 20px", marginBottom: 18 }}>
+            <h1 style={{ margin: "0 0 4px", fontSize: 25, fontWeight: 700, lineHeight: 1.15 }}>ACO Quality Reporting Calculator</h1>
+            <p style={{ margin: 0, fontSize: 13, color: T.inkSoft, lineHeight: 1.5 }}>
+              Medicare Shared Savings Program ACOs report five quality measures and choose a reporting method for
+              each. The same care scores differently — and pays differently — depending on the method's benchmark
+              table and bonuses. Everything here uses CMS's actual <b>2026</b> tables (care year 2026, reported
+              early 2027). Pick an example ACO, choose methods, adjust inputs.
+            </p>
           </div>
 
           {/* wide screens: inputs (steps + measure cards) left, outputs (score + dollars) right */}
@@ -985,13 +977,13 @@ export default function AppPlusPathwayLab() {
                 </p>
               </div>
               <div style={{ border: `1.5px solid ${mach.deemed ? T.line : mach.q >= QPS ? T.pass : T.fail}`, background: "#fff", borderRadius: 4, padding: "8px 10px", opacity: mach.deemed ? 0.55 : 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 10, ...mono, marginBottom: 4 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 10, ...mono, marginBottom: mach.deemed ? 0 : 4 }}>
                   <span style={{ color: T.inkSoft }}>ROUTE B · PASS BY SCORE — beat the national 40th percentile</span>
                   <b style={{ color: mach.deemed ? T.inkFaint : mach.q >= QPS ? T.pass : T.fail, whiteSpace: "nowrap" }}>
-                    {mach.deemed ? "NOT CONSULTED" : `${mach.q.toFixed(1)} ${mach.q >= QPS ? "≥" : "<"} ${QPS}`}
+                    {mach.deemed ? `NOT CONSULTED · score ${mach.q.toFixed(1)} vs ${QPS}` : `${mach.q.toFixed(1)} ${mach.q >= QPS ? "≥" : "<"} ${QPS}`}
                   </b>
                 </div>
-                <ThresholdStrip value={mach.q} threshold={QPS} flagLabel="passing bar 73.85 (real '26)" dimmed={mach.deemed} />
+                {!mach.deemed && <ThresholdStrip value={mach.q} threshold={QPS} flagLabel="passing bar 73.85 (real '26)" />}
                 {!mach.deemed && mach.q < QPS && (
                   <p style={{ fontSize: 9.5, color: T.inkFaint, margin: "4px 0 0", lineHeight: 1.4 }}>
                     Below the bar with no automatic pass: if an outcome measure still beat the bottom 10%, the ACO
@@ -1090,7 +1082,16 @@ export default function AppPlusPathwayLab() {
           </div>
           </div>
 
-          <div style={{ maxWidth: 920, marginTop: 16 }}>
+          <footer style={{ marginTop: 24, borderTop: `1px solid ${T.line}`, paddingTop: 12 }}>
+            <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "baseline", fontSize: 11, marginBottom: 8 }}>
+              <span style={{ fontWeight: 700, color: T.ink }}>ACO Quality Reporting Calculator</span>
+              <a href="https://github.com/jmandel/app-plus-quality-lab" style={{ color: T.inkSoft }}>source on GitHub</a>
+              <a href="https://github.com/jmandel/app-plus-quality-lab/blob/main/research/findings.md" style={{ color: T.inkSoft }}>calibration findings</a>
+              <a href="https://github.com/jmandel/app-plus-quality-lab/tree/main/research" style={{ color: T.inkSoft }}>research dataset</a>
+              <a href="https://github.com/jmandel/app-plus-quality-lab/blob/main/docs/talk-track.md" style={{ color: T.inkSoft }}>talk track</a>
+              <span style={{ color: T.inkFaint }}>an educational simulator, not reporting advice</span>
+            </div>
+            <div style={{ maxWidth: 920 }}>
           <Info summary="Model scope — what's in, what's out">
             In scope: how the five reported measures are scored under each collection type
             against real 2026 benchmarks; the quality performance standard (met by score or by the reporting
@@ -1122,7 +1123,8 @@ export default function AppPlusPathwayLab() {
             25th/10th-percentile values from the same file. (Practice-group counts in the stories are
             narrative color, not percentile-derived.)
           </Info>
-          </div>
+            </div>
+          </footer>
         </div>
       </div>
     </div>
