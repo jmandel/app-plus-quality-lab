@@ -186,7 +186,7 @@ const stripe = (c: string): React.CSSProperties => ({ backgroundImage: `repeatin
 const fmt$ = (m: number) => `${m < 0 ? "−" : ""}$${Math.abs(m).toFixed(2)}M`;
 const SHORT: Record<PathwayId, string> = { ecqm: "E", mipscqm: "R", medcqm: "C", medecqm: "X" };
 type Status = "DEEMED" | "MET" | "ALT" | "FAILED";
-const statusLabel = (s: Status) => s === "DEEMED" ? "PASS (auto)" : s === "MET" ? "PASS" : s === "ALT" ? "PARTIAL" : "FAIL";
+const statusLabel = (s: Status) => s === "DEEMED" ? "DEEMED" : s === "MET" ? "MET" : s === "ALT" ? "PARTIAL" : "NOT MET";
 
 /* ---------------- measurement + scoring model ---------------- */
 
@@ -314,6 +314,32 @@ function PinRow({ pins, cur, onPick, fmt, color = T.ink }: { pins: Pin[]; cur: n
         );
       })}
     </span>
+  );
+}
+
+// Why each ladder has its shape — policy rationale, not just data (see research/findings.md L1).
+function benchBadge(bench: Bench): { label: string; why: string } {
+  if (bench.est) return { label: "PENDING · set after submit", why: "No 2026 benchmark published for this cell. CMS computes a performance-period benchmark after all submissions; the 2025 ladder is shown as an estimate and the measure is excluded from the score (42 CFR 414.1367(c)(1)(i))." };
+  if (bench.kind === "flat percentage") return { label: "FLAT · clinical guardrail", why: "Flat by rule, not data: CMS won't let peer competition above 90% encourage inappropriate treatment (aggressive BP/A1c control) — 42 CFR 414.1380(b)(1)(ii)(C)." };
+  if (bench.kind === "flat (finalized for PY26)") return { label: "FLAT · M-CQM policy", why: "Policy-set flat bands for a Medicare CQM's first two performance periods (CY2025 PFS final rule)." };
+  if (bench.kind.startsWith("flat")) return { label: "FLAT · proposed rule", why: "CMS-1848-P proposes flat bands for all Medicare CQMs and the new Medicare eCQMs — not final (decision ~November 2026)." };
+  if (bench.kind === "historical (real ACO data)") return { label: "HISTORICAL · real ACOs", why: "Deciles of actual PY2024 ACO Medicare CQM submissions — the first year CMS had real ACO data for these measures." };
+  return { label: "HISTORICAL · peer curve", why: "Deciles of what real reporters scored nationally for this collection type in the baseline period." };
+}
+
+function RateMeter({ actual, max }: { actual: number; max: number }) {
+  const pct = max > 0 ? Math.max(0, Math.min(100, (actual / max) * 100)) : 0;
+  return (
+    <div style={{ margin: "2px 0" }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3, ...mono }}>
+        <span style={{ fontSize: 10, color: T.inkSoft }}>ACTUAL SHARING RATE</span>
+        <b style={{ fontSize: 20, color: T.money, lineHeight: 1 }}>{actual.toFixed(actual % 1 ? 1 : 0)}%</b>
+        <span style={{ fontSize: 11, color: T.inkSoft }}>of {max}% max</span>
+      </div>
+      <div style={{ height: 12, border: `1px solid ${T.line}`, borderRadius: 3, background: "#fff", overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: T.money, opacity: 0.8 }} />
+      </div>
+    </div>
   );
 }
 
@@ -492,7 +518,7 @@ function Station({ row, gate, onRoute, onRate }: { row: MeasureRow; gate: boolea
             <b style={{ color: T.ink, flexShrink: 0 }}>{row.underlying}%</b>
           </span>
           <span style={line}>measured ({ct.label.replace("Medicare ", "M-")}): <b style={{ color: ct.color }}>{row.measured.toFixed(1)}%</b></span>
-          <span style={line}>ladder: {row.bench.est ? "2025 est. — no '26 bench" : row.bench.kind}{row.bench.topped ? " · TOPPED" : ""}</span>
+          <span style={{ ...line, cursor: "help" }} title={benchBadge(row.bench).why}>{benchBadge(row.bench).label}{row.bench.topped ? " · 7-pt cap" : ""}</span>
           <span style={line}>{row.excluded
             ? <>est. decile <b style={{ color: T.ink }}>{row.decile}</b> — <b style={{ color: T.fail }}>excluded from score</b></>
             : <>decile <b style={{ color: T.ink }}>{row.decile}</b>{row.capped ? ` → capped @7` : ""} = <b style={{ color: gate ? T.ink : T.fail }}>{row.pts} pts</b></>}</span>
@@ -642,7 +668,7 @@ export default function AppPlusPathwayLab() {
       if (!best || e.f.net$ > best.f.net$ + 1e-9 || (Math.abs(e.f.net$ - best.f.net$) < 1e-9 && e.m.q > best.m.q)) best = e;
     }
     rows.push({ key: "cfg", label: "As configured above", labelColor: T.ink, showMethods: true, ...evalR(routing, gates) });
-    rows.push({ key: "best", label: "Best mix (all 243 PY26-legal checked)", labelColor: T.money, showMethods: true, ...best! });
+    rows.push({ key: "best", label: "Explore: highest-$ mix (243 checked)", labelColor: T.money, showMethods: true, ...best! });
     return rows;
   }, [rates, capture, grossPct, benchmarkM, track, msr, scen, proposedFlat, routing, gates]);
 
@@ -735,7 +761,7 @@ export default function AppPlusPathwayLab() {
               </p>
             </Panel>
 
-            <Panel title="Step 2 · Choose a reporting method for all five measures" tag={allSame ? CT[allSame].label : isBestApplied ? "best mix applied" : "mixed (set per measure below)"}>
+            <Panel title="Step 2 · Choose a reporting method for all five measures" tag={allSame ? CT[allSame].label : isBestApplied ? "highest-$ mix applied" : "mixed (set per measure below)"}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {PATHWAYS.map((k) => (
                   <button key={k} onClick={() => routeAll(k)} style={{
@@ -748,7 +774,7 @@ export default function AppPlusPathwayLab() {
                       <PopGlyph full={CT[k].fullPop} color={allSame === k ? "#fff" : CT[k].color} size={14} />
                       <PipeGlyph electronic={CT[k].electronic} color={allSame === k ? "#fff" : CT[k].color} width={24} />
                     </span>
-                    <span style={{ textAlign: "left" }}>All {CT[k].label}{CT[k].proposed ? "*" : ""}{CT[k].sunset ? "†" : ""}</span>
+                    <span style={{ textAlign: "left" }}>{CT[k].label}{CT[k].proposed ? "*" : ""}{CT[k].sunset ? "†" : ""}</span>
                   </button>
                 ))}
                 <button onClick={() => { setRouting({ ...bestRouting }); setGates({ "001": true, "134": true, "236": true, "112": true, "113": true }); }}
@@ -765,7 +791,7 @@ export default function AppPlusPathwayLab() {
                       <circle cx="8" cy="8" r="2.4" fill={isBestApplied ? "#fff" : T.money} />
                     </svg>
                   </span>
-                  <span>Apply best mix</span>
+                  <span>Apply highest-$ mix</span>
                   <span style={{ display: "flex", gap: 6, marginLeft: 2 }}>
                     {MEASURES.map((m) => (
                       <span key={m.id} title={`${m.id} → ${CT[bestRouting[m.id]].label}`}
@@ -786,7 +812,7 @@ export default function AppPlusPathwayLab() {
               </div>
               <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "8px 0 0", lineHeight: 1.5 }}>
                 These buttons set all five measures at once; each measure's card below can override it (mixing
-                methods is allowed). The green button applies the best mix from the comparison table and clears any
+                methods is allowed). The green button applies the comparison table's highest-dollar mix — an exploration, not advice — and clears any
                 simulated reporting failures. eCQM =
                 calculated electronically from EHR data, all patients. MIPS CQM (†) = chart review / registry, all
                 patients — PY2026 is its final year under current law (CMS-1848-P proposes an extension, not final).
@@ -927,7 +953,7 @@ export default function AppPlusPathwayLab() {
 
           {/* waterfall + rails */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))", gap: 12, marginBottom: 12 }}>
-            <Panel title="How the points add up" tag={`quality score: ${mach.q.toFixed(1)} / 100`}>
+            <Panel title="How the points add up" tag={`score ${mach.q.toFixed(1)}% = ${mach.total} of ${mach.available} pts`}>
               <Waterfall steps={steps} total={mach.total} />
               <p style={{ fontSize: 10, color: T.inkFaint, margin: "6px 0 0" }}>
                 Each bar adds one measure's points. "COA" (striped) is a bonus point per electronically-reported
@@ -937,7 +963,7 @@ export default function AppPlusPathwayLab() {
             <Panel title="Does the ACO pass the quality standard?" tag="two routes — either one passes on its own">
               <div style={{ border: `1.5px solid ${mach.deemed ? T.pass : T.line}`, background: mach.deemed ? "rgba(22,163,74,0.06)" : "#fff", borderRadius: 4, padding: "8px 10px", marginBottom: 8 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 10, ...mono, marginBottom: 6 }}>
-                  <span style={{ color: T.inkSoft }}>ROUTE A · AUTOMATIC PASS — the eCQM/MIPS CQM reporting incentive</span>
+                  <span style={{ color: T.inkSoft }}>ROUTE A · DEEMED — the eCQM/MIPS CQM reporting incentive</span>
                   <b style={{ color: mach.deemed ? T.pass : T.fail, whiteSpace: "nowrap" }}>{mach.deemed ? "ALL 4 MET ✓" : `${deemLit}/4 MET`}</b>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
@@ -947,7 +973,7 @@ export default function AppPlusPathwayLab() {
                   <StatusLamp on={mach.otherOK} label="At least one of the remaining seven measures (incl. CAHPS + claims) reached the 40th percentile" />
                 </div>
                 <p style={{ fontSize: 9.5, color: T.inkFaint, margin: "6px 0 0", lineHeight: 1.4 }}>
-                  Meet all four conditions and the standard is met automatically — the score below isn't consulted.
+                  Meet all four and the ACO is deemed to meet the standard — the score below isn't consulted.
                 </p>
               </div>
               <div style={{ border: `1.5px solid ${mach.deemed ? T.line : mach.q >= QPS ? T.pass : T.fail}`, background: "#fff", borderRadius: 4, padding: "8px 10px", opacity: mach.deemed ? 0.55 : 1 }}>
@@ -968,20 +994,40 @@ export default function AppPlusPathwayLab() {
               <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <WireIcon binary color={statusColor} />
                 <span style={{ fontSize: 13, fontWeight: 700, color: statusColor, ...mono }}>
-                  {mach.status === "DEEMED" ? "PASSES (automatic)" : mach.status === "MET" ? "PASSES (by score)" : mach.status === "ALT" ? "PARTIAL (reduced savings)" : "FAILS"}
+                  {mach.status === "DEEMED" ? "DEEMED · full rate" : mach.status === "MET" ? "MET BY SCORE · full rate" : mach.status === "ALT" ? "PARTIAL · rate scaled by score" : "NOT MET"}
                 </span>
                 <span style={{ fontSize: 10, color: T.inkFaint }}>
-                  {mach.status === "DEEMED" ? "via Route A — the reporting incentive" : mach.status === "MET" ? "via Route B — score above the bar" : mach.status === "ALT" ? "neither route passed; the outcome floor preserves scaled sharing" : "neither route passed, and no outcome measure cleared the floor"}
+                  {mach.status === "DEEMED" ? "all four Route A conditions met" : mach.status === "MET" ? "Route B — score above the bar" : mach.status === "ALT" ? "neither route; the outcome floor keeps scaled sharing" : "neither route, no outcome floor"}
                 </span>
               </div>
               <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 5, fontSize: 11, ...mono, color: T.inkSoft }}>
-                <span>{TRACKS[track].label} track — sharing capped at {TRACKS[track].maxShare}%{msr > 0 ? `, savings shared only past the ${msr.toFixed(1)}% minimum savings rate` : ""}</span>
-                <span>ACO keeps <b style={{ color: T.money }}>{fin.sharePct.toFixed(0)}%</b> of any savings → <b style={{ color: T.money }}>{fmt$(fin.savings$)}</b>{grossPct > 0 && grossPct < msr ? " — under the minimum savings rate, nothing is shared" : ""}</span>
-                {TRACKS[track].loss === "none"
-                  ? <span>one-sided track: <b style={{ color: T.money }}>no shared losses</b></span>
-                  : TRACKS[track].loss === "flat30"
-                    ? <span>ACO repays a flat <b style={{ color: T.debt }}>30%</b> of any overspend → <b style={{ color: T.debt }}>{fmt$(fin.losses$)}</b> (fixed — does not move with quality)</span>
-                    : <span>ACO repays <b style={{ color: T.debt }}>{fin.lossPct.toFixed(0)}%</b> of any overspend → <b style={{ color: T.debt }}>{fmt$(fin.losses$)}</b> (higher quality score = smaller repayment)</span>}
+                <span style={{ fontSize: 10, color: T.inkFaint }}>SETTLEMENT · {TRACKS[track].label}</span>
+                {fin.gross >= 0 ? (
+                  <>
+                    <span>savings pool <b style={{ color: T.money }}>{fmt$(fin.gross)}</b> <span style={{ color: T.inkFaint }}>(spent {grossPct.toFixed(1)}% under the ${benchmarkM}M benchmark)</span></span>
+                    {msr > 0 && (grossPct >= msr
+                      ? <span style={{ color: T.inkFaint, cursor: "help" }} title="Minimum savings rate: CMS shares nothing until savings beat this margin — a noise gate, sized by ACO population for one-sided BASIC tracks, electable down to 0% for two-sided.">qualifies for sharing: {grossPct.toFixed(1)}% savings ≥ {msr.toFixed(1)}% minimum ✓</span>
+                      : <span style={{ color: T.fail, fontWeight: 700, cursor: "help" }} title="Minimum savings rate: CMS shares nothing until savings beat this margin — a noise gate, sized by ACO population for one-sided BASIC tracks, electable down to 0% for two-sided.">does not qualify: {grossPct.toFixed(1)}% savings under the {msr.toFixed(1)}% minimum · nothing shared</span>)}
+                    <RateMeter actual={fin.sharePct} max={TRACKS[track].maxShare} />
+                    {mach.status === "ALT" && <span style={{ color: T.inkFaint }}>= {TRACKS[track].maxShare}% max × {mach.q.toFixed(1)}% score (standard missed, outcome floor met)</span>}
+                    {mach.status === "FAILED" && <span style={{ color: T.fail, fontWeight: 700 }}>quality standard not met · nothing shared</span>}
+                    <span>→ ACO share <b style={{ color: T.money, fontSize: 14 }}>{fmt$(fin.savings$)}</b></span>
+                  </>
+                ) : (
+                  <>
+                    <span>overspend <b style={{ color: T.debt }}>{fmt$(Math.abs(fin.gross))}</b> <span style={{ color: T.inkFaint }}>({Math.abs(grossPct).toFixed(1)}% over the ${benchmarkM}M benchmark)</span></span>
+                    {TRACKS[track].loss === "none" ? (
+                      <span>one-sided track · <b style={{ color: T.money }}>no shared losses</b></span>
+                    ) : TRACKS[track].loss === "flat30" ? (
+                      <span>fixed 30% loss rate (quality-blind) → repays <b style={{ color: T.debt }}>{fmt$(Math.abs(fin.losses$))}</b></span>
+                    ) : (
+                      <>
+                        <span>max exposure 75% ({fmt$(0.75 * Math.abs(fin.gross))}) · quality trims the rate to <b style={{ color: T.debt }}>{fin.lossPct.toFixed(0)}%</b> → repays <b style={{ color: T.debt }}>{fmt$(Math.abs(fin.losses$))}</b></span>
+                        <span>quality protection <b style={{ color: T.money }}>{fmt$((0.75 - fin.lossPct / 100) * Math.abs(fin.gross))}</b> avoided</span>
+                      </>
+                    )}
+                  </>
+                )}
                 <span style={{ borderTop: `1px solid ${T.line}`, paddingTop: 5 }}>combined result: <b style={{ color: fin.net$ >= 0 ? T.money : T.debt, fontSize: 14 }}>{fmt$(fin.net$)}</b> · one extra quality point is currently worth <b style={{ color: marginal >= 0 ? T.money : T.debt }}>{marginal >= 0 ? "+" : ""}${Math.abs(marginal) >= 1000 ? (marginal / 1000).toFixed(2) + "M" : marginal.toFixed(0) + "k"}</b></span>
               </div>
             </Panel>
@@ -1022,14 +1068,14 @@ export default function AppPlusPathwayLab() {
               strategy changes. Superscript letters mark each measure's method in mixed rows: E = eCQM, R = MIPS CQM
               (registry), C = Medicare CQM, X = Medicare eCQM (proposed). "As configured above" mirrors your current
               per-measure choices and gate toggles; all other rows assume every measure meets the minimum reporting
-              requirements. "Best mix" is exact, not heuristic: when mixing only the two all-patient methods, the best
+              requirements. The explored mix is exact, not heuristic: when mixing only the two all-patient methods, the best
               choice can be made measure-by-measure (the automatic-pass rule survives any such mix and the electronic
               bonus is per-measure), but Medicare-only methods make the automatic-pass rule an all-or-nothing question
               across measures — so the calculator simply evaluates all 243 assignments available for 2026 and shows
               the one with the highest combined dollars (Medicare eCQM appears as a preview row but is excluded from
               the search — it doesn't exist until 2027, and only if finalized). Dollar ties are broken by the higher
               quality score: in a savings year above the minimum savings rate, every strategy that passes the standard
-              pays the same dollars — the sharing rate saturates at the track cap — so "Best mix" is then the
+              pays the same dollars — the sharing rate saturates at the track cap — so the explored mix is then the
               highest-score route to that money. The score still matters for public reporting, as the fallback if the
               automatic pass ever breaks, and for loss scaling in ENHANCED. Differences across rows come from the benchmark tables, electronic
               data-capture losses, the 7-point cap on measure 134 under MIPS CQM (marked ᶜ), and which methods carry
