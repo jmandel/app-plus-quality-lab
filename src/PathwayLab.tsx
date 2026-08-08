@@ -343,6 +343,15 @@ function RateMeter({ actual, max }: { actual: number; max: number }) {
   );
 }
 
+function Info({ summary, children }: { summary: string; children: React.ReactNode }) {
+  return (
+    <details style={{ fontSize: 10.5, color: T.inkFaint, lineHeight: 1.5, margin: "3px 0 0" }}>
+      <summary style={{ cursor: "pointer", fontSize: 10, color: T.inkSoft }}>{summary}</summary>
+      <div style={{ margin: "4px 0 0" }}>{children}</div>
+    </details>
+  );
+}
+
 interface FinInputs {
   grossPct: number;
   benchmarkM: number;
@@ -713,13 +722,10 @@ export default function AppPlusPathwayLab() {
             <div style={{ padding: "14px 20px", flex: "1 1 380px", borderRight: `1px solid ${T.line}` }}>
               <h1 style={{ margin: "0 0 6px", fontSize: 25, fontWeight: 700, lineHeight: 1.15 }}>ACO Quality Reporting Calculator</h1>
               <p style={{ margin: 0, fontSize: 13, color: T.inkSoft, maxWidth: 640, lineHeight: 1.55 }}>
-                Medicare Shared Savings Program ACOs must report five quality measures to CMS each year, and can choose
-                among several reporting methods (called "collection types") for each measure. Each method scores the
-                same measure against a different benchmark table, and some methods come with bonuses that others don't.
-                Everything here is the <b>2026 performance year</b> — care delivered January–December 2026, reported
-                to CMS in early 2027, scored on the benchmark tables CMS published in January 2026 — so the same
-                clinical performance earns different scores, and different shared-savings dollars, depending on the
-                reporting method. Pick an example ACO, choose methods, adjust inputs.
+                Medicare Shared Savings Program ACOs report five quality measures and choose a reporting method for
+                each. The same care scores differently — and pays differently — depending on the method's benchmark
+                table and bonuses. Everything here uses CMS's actual <b>2026</b> tables (care year 2026, reported
+                early 2027). Pick an example ACO, choose methods, adjust inputs.
               </p>
             </div>
             <div style={{ padding: "14px 20px", ...mono, fontSize: 10, color: T.inkSoft, display: "flex", flexDirection: "column", gap: 3, justifyContent: "center" }}>
@@ -811,14 +817,15 @@ export default function AppPlusPathwayLab() {
                 </button>
               </div>
               <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "8px 0 0", lineHeight: 1.5 }}>
-                These buttons set all five measures at once; each measure's card below can override it (mixing
-                methods is allowed). The green button applies the comparison table's highest-dollar mix — an exploration, not advice — and clears any
-                simulated reporting failures. eCQM =
-                calculated electronically from EHR data, all patients. MIPS CQM (†) = chart review / registry, all
-                patients — PY2026 is its final year under current law (CMS-1848-P proposes an extension, not final).
-                Medicare CQM = chart review, Medicare patients only. Medicare eCQM (*) = electronic, Medicare patients
-                only — proposed to begin in 2027, not yet final.
+                These buttons set all five measures at once; each card below can override (mixing is allowed).
               </p>
+              <Info summary="the four methods · the green button">
+                eCQM = electronic from EHR data, all patients. MIPS CQM (†) = chart review / registry, all patients —
+                PY2026 is its final year under current law (an extension is proposed, not final). Medicare CQM =
+                chart review, Medicare patients only. Medicare eCQM (*) = electronic, Medicare patients only —
+                proposed for 2027, not final. The green button applies the comparison table's highest-dollar mix — an
+                exploration, not advice — and clears any simulated reporting failures.
+              </Info>
             </Panel>
           </div>
 
@@ -831,21 +838,18 @@ export default function AppPlusPathwayLab() {
                 <div style={{ margin: "2px 0 0" }}>
                   <PinRow pins={CAPTURE_PINS} cur={capture * 100} onPick={(v) => setCapture(v / 100)} fmt={(v) => `${v}%`} color={CT.ecqm.color} />
                 </div>
-                <p style={{ fontSize: 9.5, color: T.inkFaint, margin: "3px 0 0", lineHeight: 1.4 }}>
-                  Pins are labeled assumptions (no public per-ACO source); "top-rung" ≈ the capture needed for the
-                  best deciles of the eCQM ladders at strong care rates.
-                </p>
                 <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "3px 0 0", lineHeight: 1.45 }}>
-                  Electronic (eCQM) reporting is computed by the EHR over every eligible patient, all payers — there
-                  is no picking who to report, and both sides of the measure run on structured data. The slider
-                  models the numerator side: care counts only as conforming coded proof (labs, vitals, screenings),
-                  so truly-delivered but uncoded care is reported as failure. (001's spec counts a missing result as
-                  poor control, so capture gaps push its rate up.) The denominator side isn't modeled: a patient
-                  whose diagnosis or encounters never get coded vanishes from the measure entirely — an effect that
-                  cuts both ways and often flatters the rate, since invisible patients skew toward the unscreened and
-                  uncontrolled. CMS's easier electronic benchmarks bake in both effects nationally. A collapse
-                  breaking the 75% completeness rule is the separate "reporting failure" checkbox below.
+                  Share of truly-delivered care with conforming coded proof — uncoded care is reported as failure.
                 </p>
+                <Info summary="how capture works · what's not modeled">
+                  eCQMs are computed over every eligible patient, all payers — no picking who to report. The slider
+                  models the numerator: care counts only as coded proof, so uncoded care reports as failure (001
+                  counts a missing result as poor control, so its rate rises). Not modeled: patients whose diagnoses
+                  or encounters are never coded vanish from the measure entirely — that often flatters rates, since
+                  invisible patients skew unscreened and uncontrolled. CMS's easier electronic benchmarks bake in
+                  both effects. Pins are labeled assumptions ("top-rung" ≈ capture needed for the best eCQM deciles);
+                  a collapse breaking the 75% completeness rule is the "reporting failure" checkbox below.
+                </Info>
               </div>
               <div>
                 <div style={{ fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 6, minHeight: 16 }}>ORGANIZATION (this ACO)</div>
@@ -882,12 +886,14 @@ export default function AppPlusPathwayLab() {
                   <PinRow pins={MSR_PINS} cur={msr} onPick={setMsr} fmt={(v) => `${v.toFixed(1)}%`} />
                 </div>
                 <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "3px 0 0", lineHeight: 1.45 }}>
-                  Cost benchmark sizes the savings/loss pool; pins are updated-benchmark percentiles of the real 476
-                  PY2024 ACOs. Track sets the sharing cap (40% BASIC A–B / 50% C–E / 75% ENHANCED) and the loss rail
-                  (none / flat 30% / quality-scaled). One-sided BASIC ACOs get a size-based sliding-scale minimum
-                  savings rate (the MSR pins show real values by ACO size); two-sided tracks may elect lower, down
-                  to 0%. A Step 1 preset resets these; any change makes the ACO custom.
+                  Pins are real PY2024 percentiles (476 ACOs). Any change makes the ACO custom.
                 </p>
+                <Info summary="what track & minimum savings rate do">
+                  Cost benchmark sizes the savings/loss pool. Track sets the sharing cap (40% BASIC A–B / 50% C–E /
+                  75% ENHANCED) and the loss rail (none / flat 30% / quality-scaled). One-sided BASIC ACOs get a
+                  size-based sliding-scale minimum savings rate (the pins show real values by ACO size); two-sided
+                  tracks may elect down to 0%. A Step 1 preset resets all of these.
+                </Info>
               </div>
               <div>
                 <div style={{ fontSize: 10.5, ...mono, color: T.inkSoft, marginBottom: 6, minHeight: 16 }}>GROSS SAVINGS RATE: <b style={{ color: grossPct >= 0 ? T.money : T.debt }}>{grossPct >= 0 ? "+" : ""}{grossPct.toFixed(1)}%</b> <span style={{ color: T.inkFaint }}>= spent {Math.abs(grossPct).toFixed(1)}% {grossPct >= 0 ? "UNDER" : "OVER"} its cost benchmark</span></div>
@@ -895,12 +901,12 @@ export default function AppPlusPathwayLab() {
                 <div style={{ margin: "2px 0 4px" }}>
                   <PinRow pins={GROSS_PINS} cur={grossPct} onPick={setGrossPct} fmt={(v) => `${v >= 0 ? "+" : ""}${v}%`} color={T.money} />
                 </div>
-                <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "3px 0 0", lineHeight: 1.45 }}>
-                  Methods that report only Medicare patients are assumed to score {POP_ADJ} points better on screening
-                  rates (older patients get screened more). Three additional measures are scored by CMS without any ACO
-                  submission — a patient survey (CAHPS) and two measures computed from claims — fixed here at
-                  {" "}{scen.fixedPts.cahps}, {scen.fixedPts.claims1}, and {scen.fixedPts.claims2} points for this example.
-                </p>
+                <Info summary="population shift · the three fixed measures">
+                  Medicare-only methods are assumed to score {POP_ADJ} points better on screening rates (older
+                  patients get screened more). Three more measures are scored by CMS with no ACO submission — a
+                  patient survey (CAHPS) and two claims measures — fixed here at {scen.fixedPts.cahps},{" "}
+                  {scen.fixedPts.claims1}, and {scen.fixedPts.claims2} points for this example.
+                </Info>
                 <label style={{ display: "flex", gap: 7, alignItems: "flex-start", marginTop: 8, cursor: "pointer" }}>
                   <input type="checkbox" checked={proposedFlat} onChange={(e) => setProposedFlat(e.target.checked)} style={{ marginTop: 2 }} />
                   <span style={{ fontSize: 10.5, color: T.inkSoft, lineHeight: 1.45 }}>
@@ -937,20 +943,19 @@ export default function AppPlusPathwayLab() {
               ))}
             </div>
             <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "8px 0 0", lineHeight: 1.5 }}>
-              How to read a card: the ladder is the benchmark for the chosen method — ten bands worth 1 to 10 points,
-              drawn to scale from CMS's real 2026 tables (hover a rung for its cutpoints). The "care" slider is the
-              ACO's true care rate; its chips jump to registry-reported percentiles — real chart-review rates with no
-              capture loss (001/134/236: CMS's 2026 Medicare CQM tables from actual ACO submissions; 112/113: the
-              2025 MIPS CQM file; for 001 they are performance percentiles, so lower is better). The "measured" rate
-              is where this ACO lands after the data-capture and population adjustments (Step 3). (To simulate a measure failing CMS's minimum reporting
-              requirements, use the checkboxes in Step 3.) 2026 quirks: measures
-              112 and 113 have NO published 2026 benchmark under eCQM or MIPS CQM (dashed ladders — CMS will set the
-              benchmark after submission; 2025 values shown as estimates, and the lab excludes these measures from
-              both earned points and the denominator per 42 CFR 414.1367(c)(1)(i)), measure 134 under MIPS CQM is capped at 7
-              points (dashed red line), measure 001 counts a bad outcome so lower rates score higher, and the Medicare
-              CQM ladders for 001, 134, and 236 are now built from real ACO submissions — far steeper in the middle
-              than the old flat bands, unless the pending proposed rule (toggle above — applied by default) restores flat scoring.
+              The ladder is the chosen method's real 2026 benchmark (hover a rung for its cutpoints); the "care"
+              slider is the ACO's true rate, and "measured" is where it lands after Step 3 adjustments.
             </p>
+            <Info summary="chip provenance · 2026 quirks">
+              Care-rate chips jump to registry-reported percentiles — real chart-review rates with no capture loss
+              (001/134/236: CMS's 2026 Medicare CQM tables from actual ACO submissions; 112/113: the 2025 MIPS CQM
+              file; 001's percentiles are of performance, so lower is better). Quirks: 112/113 have no published 2026
+              benchmark under eCQM or MIPS CQM (dashed ladders; excluded from both earned points and the denominator
+              per 42 CFR 414.1367(c)(1)(i)); 134 under MIPS CQM is capped at 7 points (dashed red line); 001 counts a
+              bad outcome, so lower is better; the Medicare CQM ladders for 001/134/236 are built from real ACO
+              submissions — far steeper than the flat bands the pending proposed rule (toggle in Step 3, on by
+              default) restores. Simulate a reporting failure with the Step 3 checkboxes.
+            </Info>
           </Panel>
 
 
@@ -1067,30 +1072,27 @@ export default function AppPlusPathwayLab() {
               </table>
             </div>
             <p style={{ fontSize: 10.5, color: T.inkFaint, margin: "8px 0 0", lineHeight: 1.5 }}>
-              Every row is the same ACO delivering the same care in the 2026 performance year — only the reporting
-              strategy changes. Superscript letters mark each measure's method in mixed rows: E = eCQM, R = MIPS CQM
-              (registry), C = Medicare CQM, X = Medicare eCQM (proposed). "As configured above" mirrors your current
-              per-measure choices and gate toggles; all other rows assume every measure meets the minimum reporting
-              requirements. The explored mix is exact, not heuristic: when mixing only the two all-patient methods, the best
-              choice can be made measure-by-measure (the automatic-pass rule survives any such mix and the electronic
-              bonus is per-measure), but Medicare-only methods make the automatic-pass rule an all-or-nothing question
-              across measures — so the calculator simply evaluates all 243 assignments available for 2026 and shows
-              the one with the highest combined dollars (Medicare eCQM appears as a preview row but is excluded from
-              the search — it doesn't exist until 2027, and only if finalized). Dollar ties are broken by the higher
-              quality score: in a savings year above the minimum savings rate, every strategy that passes the standard
-              pays the same dollars — the sharing rate saturates at the track cap — so the explored mix is then the
-              highest-score route to that money. The score still matters for public reporting, as the fallback if the
-              automatic pass ever breaks, and for loss scaling in ENHANCED. Differences across rows come from the benchmark tables, electronic
-              data-capture losses, the 7-point cap on measure 134 under MIPS CQM (marked ᶜ), and which methods carry
-              the automatic-pass rule and the electronic reporting bonus.
+              Every row is the same ACO delivering the same care — only the reporting strategy changes. Superscripts
+              mark mixed-row methods: E = eCQM, R = MIPS CQM, C = Medicare CQM, X = Medicare eCQM.
             </p>
+            <Info summary="how the explored mix works · why dollars tie">
+              "As configured above" mirrors your current choices and gate toggles; other rows assume every measure
+              reports successfully. The explored mix is exact: the calculator evaluates all 243 assignments legal for
+              2026 (Medicare eCQM is a preview row, excluded from the search). Dollar ties are broken by the higher
+              score — above the minimum savings rate, every passing strategy pays the same because the sharing rate
+              saturates at the track cap, so the explored mix is the highest-score route to that money; the score
+              still matters for public reporting, as the fallback if the automatic pass breaks, and for ENHANCED loss
+              scaling. Row differences come from benchmark tables, capture losses, the 134 cap (ᶜ), and which methods
+              carry the automatic pass and the electronic bonus.
+            </Info>
           </Panel>
 
           </div>
           </div>
 
-          <p style={{ fontSize: 11, color: T.inkSoft, marginTop: 16, maxWidth: 920, lineHeight: 1.5 }}>
-            <b>Model scope.</b> In scope: how the five reported measures are scored under each collection type
+          <div style={{ maxWidth: 920, marginTop: 16 }}>
+          <Info summary="Model scope — what's in, what's out">
+            In scope: how the five reported measures are scored under each collection type
             against real 2026 benchmarks; the quality performance standard (met by score or by the reporting
             incentive); the shared-savings rate; and quality-scaled shared losses. That is a complete model of the
             ACO-level settlement — including why the score keeps mattering after the standard is met in a loss year,
@@ -1098,9 +1100,9 @@ export default function AppPlusPathwayLab() {
             scope: clinician-level MIPS fee adjustments (the mechanism is real, but its boundaries depend on
             per-clinician QP status and billing arrangements with no public data source), fractional
             within-decile scoring, score uncertainty, and CAHPS/claims-measure variation.
-          </p>
-          <p style={{ fontSize: 11, color: T.inkFaint, marginTop: 10, maxWidth: 920, lineHeight: 1.5 }}>
-            Sources and limitations: benchmark tables are CMS's actual published 2026 quality benchmarks. Where CMS
+          </Info>
+          <Info summary="Sources and limitations">
+            Benchmark tables are CMS's actual published 2026 quality benchmarks. Where CMS
             published no 2026 benchmark (measures 112 and 113 under eCQM/MIPS CQM — insufficient 2024 data), the real
             scoring will use a benchmark computed after everyone submits; 2025 tables are shown as estimates and marked
             with dashed ladders. The Medicare CQM tables for 001, 134, and 236 are the real 2026 historical benchmarks
@@ -1119,7 +1121,8 @@ export default function AppPlusPathwayLab() {
             and +4.2% gross savings; the strong scenario uses 75th-percentile values and the safety-net scenario
             25th/10th-percentile values from the same file. (Practice-group counts in the stories are
             narrative color, not percentile-derived.)
-          </p>
+          </Info>
+          </div>
         </div>
       </div>
     </div>
