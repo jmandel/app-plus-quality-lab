@@ -429,21 +429,56 @@ And CMS's explanation of why:
 The same section, same arithmetic, survives in the PY2024 guidance (§7):
 `https://qpp-cm-prod-content.s3.amazonaws.com/uploads/3124/MSSP-2024-Reporting-eCQMs-MIPS-CQMs-and-Medicare-CQMs-in-the-APP.pdf`
 
-**Three things this establishes, and one it complicates:**
+**What this establishes:**
 
 1. CMS itself publishes arithmetic in which **identical care yields a lower eCQM rate than
    MIPS CQM rate**. Our premise is CMS's own worked example.
 2. CMS attributes the difference to data "**not identified within the EHR**" — i.e. capture,
    not population. This is the capture mechanism, stated by CMS.
-3. **But the mechanism is not what our model implements.** Our model applies a multiplicative
-   numerator haircut. CMS's mechanism is a *denominator-treatment asymmetry*: patients with
-   unfound data stay in the eCQM performance-rate denominator as failures, but are
-   **removed from the MIPS CQM performance-rate denominator** and charged to data
+3. The operative rule is a **denominator-treatment asymmetry**: patients whose numerator
+   status cannot be determined stay in the eCQM performance-rate denominator *as failures*,
+   but are **removed from the MIPS CQM performance-rate denominator** and charged to data
    completeness instead. In CMS's example the eCQM denominator is 950 and the MIPS CQM
    denominator is 900.
-4. Complication: this means part of the gap is a **pure accounting rule**, not a difference
-   in how much care was captured. A registry reporter and an eCQM reporter with *identical*
-   data capture would still post different rates. See §5.
+
+#### 4.1a Our model's functional form is exactly CMS's arithmetic (my derivation)
+
+This is worth stating precisely, because it validates the simulator's core equation rather
+than merely its direction.
+
+Let `u` = share of denominator-eligible patients whose numerator status cannot be determined
+from structured data, and `r` = the true met-rate among determinable patients. Under the rule
+CMS states:
+
+```
+eCQM rate     = r·(1−u)     (undeterminable patients counted as Performance Not Met)
+MIPS CQM rate = r           (undeterminable patients dropped from the denominator)
+⇒ eCQM / MIPS CQM = (1 − u)
+```
+
+So with capture efficiency `c = 1 − u`, **`measured = true × c`** — which is exactly
+`captureLoss()` in `src/PathwayLab.tsx:197` for a normal measure.
+
+Verified against CMS's published numbers: eCQM 700/950 = 73.68% (CMS prints 74%),
+MIPS CQM 700/900 = 77.78% (CMS prints 78%), data completeness 900/950 = 94.74% (CMS prints
+94%). The ratio 73.68/77.78 = **0.947368**, and `1 − 50/950` = **0.947368**. Exact match.
+
+For an **inverse** measure such as 001, a missing result counts *into* the numerator
+(no HbA1c result ⇒ scored as poor control), so:
+
+```
+measured = r·(1−u) + u = r + u·(1−r) = r + (1−c)·(1−r)
+```
+
+which is exactly our inverse branch `r + (1-capture)*(100-r)`. Both branches of our model
+are therefore derivable from CMS's stated scoring rule, not merely plausible.
+
+**Caveat on interpretation.** CMS's example holds "Performance Met" constant at 700 across
+both collection types. In reality a registry reporter can also *chart-chase* — actively hunt
+the missing evidence and convert indeterminate patients into met ones — which CMS's example
+does not model. So our single `capture` slider is really absorbing three distinct
+mechanisms: (a) structured-capture loss, (b) the denominator-treatment asymmetry above, and
+(c) registry chart-chasing. That is acceptable for a simulator but should be labeled.
 
 **Important scope limit:** this appears only in MSSP-specific APP guidance PDFs. The phrase
 "Performance Not Met" appears in **no PFS final rule** in this sense, and the mechanism is

@@ -681,6 +681,7 @@ export default function AppPlusPathwayLab() {
   const [gates, setGates] = useState<Gates>({ "001": true, "134": true, "236": true, "112": true, "113": true });
   const [rates, setRates] = useState<Rates>({ ...s0.rates });
   const [capture, setCapture] = useState(0.85);
+  const [fixedPts, setFixedPts] = useState<FixedPts>({ ...s0.fixedPts });
   const [grossPct, setGrossPct] = useState(s0.grossPct);
   const [proposedFlat, setProposedFlat] = useState(true);
   const [assumePerfBench, setAssumePerfBench] = useState(true);
@@ -692,12 +693,13 @@ export default function AppPlusPathwayLab() {
   const scen = SCENARIOS[scenario];
   const load = (key: ScenarioKey) => {
     const s = SCENARIOS[key];
-    setScenario(key); setRates({ ...s.rates }); setGrossPct(s.grossPct);
+    setScenario(key); setRates({ ...s.rates }); setGrossPct(s.grossPct); setFixedPts({ ...s.fixedPts });
     setPerCap(s.perCap); setTrack(s.track); setBenes(s.benes); setMsrElect(s.msrElect ?? "scale");
     setGates({ "001": true, "134": true, "236": true, "112": true, "113": true });
   };
   // Presets expose their implied data: once any scenario-derived input deviates, Step 1 shows Custom.
   const isCustom = MEASURES.some((m) => rates[m.id] !== scen.rates[m.id])
+    || (["cahps", "claims1", "claims2"] as const).some((k) => fixedPts[k] !== scen.fixedPts[k])
     || perCap !== scen.perCap || Math.abs(grossPct - scen.grossPct) > 1e-9
     || track !== scen.track || benes !== scen.benes || msrElect !== (scen.msrElect ?? "scale");
   // MSR is set by rule, not freely chosen: mandatory sliding scale for one-sided BASIC;
@@ -708,7 +710,7 @@ export default function AppPlusPathwayLab() {
   const routeAll = (k: PathwayId) => setRouting({ "001": k, "134": k, "236": k, "112": k, "113": k });
   const allSame = PATHWAYS.find((k) => MEASURES.every((m) => routing[m.id] === k));
 
-  const mach = useMemo(() => runMachine(routing, rates, gates, capture, scen.fixedPts, proposedFlat, assumePerfBench), [routing, rates, gates, capture, scen, proposedFlat, assumePerfBench]);
+  const mach = useMemo(() => runMachine(routing, rates, gates, capture, fixedPts, proposedFlat, assumePerfBench), [routing, rates, gates, capture, fixedPts, proposedFlat, assumePerfBench]);
   const fin = useMemo(() => settle(mach, { grossPct, benchmarkM, track, msr }), [mach, grossPct, benchmarkM, track, msr]);
   const marginal = useMemo(() => {
     const plus = { ...mach, total: Math.min(mach.total + 1, mach.available), q: (Math.min(mach.total + 1, mach.available) / mach.available) * 100 };
@@ -728,7 +730,7 @@ export default function AppPlusPathwayLab() {
   const comparison = useMemo(() => {
     const ALLPASS: Gates = { "001": true, "134": true, "236": true, "112": true, "113": true };
     const finP = { grossPct, benchmarkM, track, msr };
-    const evalR = (r: Routing, g: Gates) => { const m = runMachine(r, rates, g, capture, scen.fixedPts, proposedFlat, assumePerfBench); return { m, f: settle(m, finP) }; };
+    const evalR = (r: Routing, g: Gates) => { const m = runMachine(r, rates, g, capture, fixedPts, proposedFlat, assumePerfBench); return { m, f: settle(m, finP) }; };
     const rows: ComparisonRow[] = PATHWAYS.map((k) => ({
       key: k, label: `All ${CT[k].label}${CT[k].proposed ? "*" : ""}${CT[k].sunset ? "†" : ""}`, labelColor: CT[k].color,
       showMethods: false, ...evalR({ "001": k, "134": k, "236": k, "112": k, "113": k }, ALLPASS),
@@ -744,7 +746,7 @@ export default function AppPlusPathwayLab() {
     rows.push({ key: "cfg", label: "As configured above", labelColor: T.ink, showMethods: true, ...evalR(routing, gates) });
     rows.push({ key: "best", label: "Explore: highest-$ mix (243 checked)", labelColor: T.money, showMethods: true, ...best! });
     return rows;
-  }, [rates, capture, grossPct, benchmarkM, track, msr, scen, proposedFlat, assumePerfBench, routing, gates]);
+  }, [rates, capture, fixedPts, grossPct, benchmarkM, track, msr, scen, proposedFlat, assumePerfBench, routing, gates]);
 
   // Routing behind the "Best mix" row, reconstructed from its per-measure results,
   // so Step 2 can offer a one-click apply.
@@ -757,7 +759,9 @@ export default function AppPlusPathwayLab() {
   const steps: WaterfallStep[] = [
     ...mach.rows.map((r) => ({ key: r.id, label: r.id, pts: r.pts, color: CT[r.pathway].color, excluded: r.excluded })),
     ...(mach.coa > 0 ? [{ key: "coa", label: "COA", pts: mach.coa, color: CT.ecqm.color, pattern: "stripe" }] : []),
-    { key: "fixt", label: "FIXT", pts: mach.fixed, color: T.fixed, kind: "fixed" },
+    { key: "cahps", label: "CAHPS", pts: fixedPts.cahps, color: T.fixed, kind: "fixed" },
+    { key: "c479", label: "479", pts: fixedPts.claims1, color: T.fixed, kind: "fixed" },
+    { key: "c484", label: "484", pts: fixedPts.claims2, color: T.fixed, kind: "fixed" },
   ];
   const statusColor = mach.status === "FAILED" ? T.fail : mach.status === "ALT" ? "#D97706" : T.pass;
   const deemLit = [mach.allFull, mach.allGates, mach.outcomeOK, mach.otherOK].filter(Boolean).length;
@@ -1018,11 +1022,25 @@ export default function AppPlusPathwayLab() {
                 <div style={{ margin: "2px 0 4px" }}>
                   <PinRow pins={GROSS_PINS} cur={grossPct} onPick={setGrossPct} fmt={(v) => `${v >= 0 ? "+" : ""}${v}%`} color={T.money} />
                 </div>
-                <Info summary="population shift · the three fixed measures">
-                  Medicare-only methods are assumed to score {POP_ADJ} points better on screening rates (older
-                  patients get screened more). Three more measures are scored by CMS with no ACO submission — a
-                  patient survey (CAHPS) and two claims measures — fixed here at {scen.fixedPts.cahps},{" "}
-                  {scen.fixedPts.claims1}, and {scen.fixedPts.claims2} points for this example.
+                <div style={{ margin: "8px 0 3px", fontSize: 10, ...mono, color: T.inkSoft }}>CMS-SCORED MEASURES (decile points)</div>
+                {([
+                  { k: "cahps" as const, label: "CAHPS survey" },
+                  { k: "claims1" as const, label: "479 readmits" },
+                  { k: "claims2" as const, label: "484 chronic" },
+                ]).map((f) => (
+                  <label key={f.k} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, ...mono, color: T.inkSoft, marginBottom: 3 }}>
+                    <span style={{ width: 100, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.label}</span>
+                    <input type="range" min={0} max={10} value={fixedPts[f.k]} onChange={(e) => setFixedPts({ ...fixedPts, [f.k]: +e.target.value })} style={{ flex: 1, accentColor: T.fixed }} aria-label={f.label} />
+                    <b style={{ width: 56, color: T.ink, whiteSpace: "nowrap", textAlign: "right" }}>{fixedPts[f.k]} pts</b>
+                  </label>
+                ))}
+                <Info summary="why these matter more than they look">
+                  CMS scores these three without any ACO submission, so the lab treats them as inputs. They are not
+                  passengers: 479 and 484 are <b>outcome</b> measures for deeming, and any of the three at 5+ points
+                  satisfies the 40th-percentile condition — so an ACO with strong survey and claims results can be
+                  deemed even with poor clinical scores. Drag them below 5 (and below 2) to break that. Medicare-only
+                  methods are separately assumed to score {POP_ADJ} points better on screening rates (older patients
+                  get screened more).
                 </Info>
                 <label style={{ display: "flex", gap: 7, alignItems: "flex-start", marginTop: 8, cursor: "pointer" }}>
                   <input type="checkbox" checked={proposedFlat} onChange={(e) => setProposedFlat(e.target.checked)} style={{ marginTop: 2 }} />
@@ -1093,7 +1111,9 @@ export default function AppPlusPathwayLab() {
             <Panel title="How the points add up" tag={`score ${mach.qRaw.toFixed(1)}% = ${mach.total} of ${mach.available} pts${mach.floored ? ` → floored to ${QPS}` : ""}`}>
               <Waterfall steps={steps} total={mach.total} available={mach.available} />
               <p style={{ fontSize: 10, color: T.inkFaint, margin: "6px 0 0" }}>
-                One bar per measure; COA = electronic bonus point; FIXT = CMS-scored survey + claims. Total ÷ {mach.available} = the score.
+                One bar per measure. COA = the electronic bonus. CAHPS (patient survey) and 479/484 (claims
+                outcome measures) are scored by CMS with no ACO submission — grey because you can't route them,
+                but they carry points and both deeming conditions. Total ÷ {mach.available} = the score.
               </p>
             </Panel>
             <Panel title="Does the ACO pass the quality standard?" tag="two routes — either one passes on its own">
