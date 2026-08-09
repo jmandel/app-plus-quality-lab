@@ -974,18 +974,18 @@ export default function AppPlusPathwayLab() {
                   ))}
                 </div>
                 <div style={{ margin: "6px 0 3px", fontSize: 10, ...mono, color: T.inkSoft, cursor: "help" }}
-                  title="Set by regulation, not chosen freely: one-sided BASIC ACOs get a mandatory sliding-scale MSR by assigned beneficiaries (42 CFR 425.605(b)(1)); two-sided tracks elect 0/0.5/1/2% or the scale — symmetric with their minimum loss rate.">
-                  MIN SAVINGS RATE: <b style={{ color: T.ink }}>{msr.toFixed(1)}%</b>{oneSided ? " · sliding scale (set by size)" : " · elected:"}
+                  title="One-sided BASIC: a mandatory sliding scale by assigned beneficiaries (42 CFR 425.605(b)(1)). Two-sided BASIC and ENHANCED: the ACO elects at application/renewal, for the whole agreement period, from zero / 0.5-2.0% in 0.5% increments / the sliding scale (425.605(b)(2), 425.610(b)(1)). The election is SYMMETRICAL — the same number is the minimum loss rate (not modeled here).">
+                  MIN SAVINGS RATE: <b style={{ color: T.ink }}>{msr.toFixed(1)}%</b>{oneSided ? " · sliding scale (set by size)" : " · elected (symmetrical, whole agreement):"}
                 </div>
                 {!oneSided && (
                   <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                    {([0, 0.5, 1, 2, "scale"] as (number | "scale")[]).map((o) => (
+                    {([0, 0.5, 1, 1.5, 2, "scale"] as (number | "scale")[]).map((o) => (
                       <button key={String(o)} onClick={() => setMsrElect(o)} style={{
                         border: `1px solid ${msrElect === o ? T.ink : T.line}`, background: msrElect === o ? T.ink : "#fff",
                         color: msrElect === o ? "#fff" : T.inkSoft, borderRadius: 2, padding: "2px 6px",
                         fontSize: 9, ...mono, cursor: "pointer", whiteSpace: "nowrap",
                       }}>
-                        {o === "scale" ? `scale ${slidingMsr(benes).toFixed(1)}%` : `${o}%`}
+                        {o === "scale" ? `scale ${slidingMsr(benes).toFixed(1)}%` : `${o}%`}{o !== "scale" && o !== 0 ? "" : ""}
                       </button>
                     ))}
                   </div>
@@ -996,10 +996,13 @@ export default function AppPlusPathwayLab() {
                 <Info summary="what track & minimum savings rate do">
                   Cost benchmark sizes the savings/loss pool. Track sets the sharing cap (40% BASIC A–B / 50% C–E /
                   75% ENHANCED) and the loss rail (none / flat 30% / quality-scaled). The minimum savings rate is set
-                  by rule, not chosen freely: one-sided BASIC ACOs get the mandatory sliding scale by assigned
-                  beneficiaries (42 CFR 425.605(b)(1); interpolated here from real PY2024 values), while two-sided
-                  tracks elect 0/0.5/1/2% or the scale — symmetric with their minimum loss rate (the loss-side gate
-                  isn't modeled). A Step 1 preset resets all of these.
+                  by rule: one-sided BASIC ACOs get the mandatory sliding scale by assigned beneficiaries
+                  (42 CFR 425.605(b)(1); interpolated here from real PY2024 values). Two-sided BASIC and ENHANCED
+                  ACOs do elect theirs — at application or renewal, fixed for the whole agreement period, choosing
+                  zero, a 0.5–2.0% value in 0.5% increments, or the same sliding scale (425.605(b)(2),
+                  425.610(b)(1)). That election is <b>symmetrical</b>: the identical number becomes the minimum
+                  loss rate, so electing 0% means sharing from the first dollar and owing from the first dollar.
+                  The loss-side gate is not modeled here. A Step 1 preset resets all of these.
                 </Info>
               </div>
               <div>
