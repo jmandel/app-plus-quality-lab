@@ -7,33 +7,68 @@ Evidence base for the simulator's "data-capture efficiency" model.
 
 ## BOTTOM LINE
 
-**Verdict: PARTIALLY SUPPORTED — the empirical premise is strongly confirmed, but the
-benchmark claim we build on it is wrong for two of our five measures, and our headline
-magnitude is inflated by a confound we had not accounted for.**
+**Verdict: PARTIALLY SUPPORTED. The capture tax is real, well-evidenced, and our model's
+equation is exactly right — CMS publishes the identical arithmetic. But the conclusion we
+draw from it is wrong: the rate gap mostly does *not* become a score gap, and the real
+eCQM penalty in APP Plus comes from a benchmark-policy artifact on two measures, not from
+"easier eCQM benchmarks."**
 
-Three separable claims, graded:
+Four claims, graded:
 
-| # | Our claim | Verdict |
+| # | Claim | Verdict |
 |---|---|---|
-| 1 | eCQM reporting produces **lower measured rates** than chart-review/registry reporting on the same measure | **SUPPORTED — strongly.** Confirmed independently in national MIPS benchmarks (median +12.3 pp, 95% of 80 measure-years) and in PY2024 MSSP ACO-level results (+8.7 to +25.7 pp vs chart abstraction, all p<0.0001). |
-| 2 | The cause is **data capture** (care happened, not provable as structured data) rather than worse care | **SUPPORTED, with the strongest single piece of evidence being ours.** The gap scales monotonically with how hard the data element is to capture — 3.7× larger for outside/narrative elements than for elements already sitting in a discrete field. Case mix is affirmatively ruled out: eCQM ACOs are *not* sicker than their comparators, and the registry ACOs that outscore them are *substantially* sicker. |
-| 3 | This is why **"CMS's eCQM benchmarks are systematically easier than MIPS CQM benchmarks"** | **PARTIALLY SUPPORTED — and FALSE for measures 001 and 236.** True where both sides carry observed benchmarks (median eCQM Decile 5 bar is 14.7 pp easier). But for 001 and 236 CMS applies a *flat* benchmark to MIPS CQM, and the flat ladder is far more lenient than the eCQM historical ladder. For those two measures the eCQM benchmark is **harder by 23.3 pp and 25.6 pp** respectively. |
+| 1 | eCQM reporting produces **lower measured rates** than registry/chart-review on the same measure | **SUPPORTED — strongly, but measure-specific.** National MIPS benchmarks: median **+12.3 pp**, eCQM worse in **95%** of 80 measure-years and **23 of 23** measures. PY2024 MSSP ACO-level vs chart abstraction: **+8.7 to +25.7 pp**, all p<0.0001. Never a uniform discount — it ranges from ~0 to 44 pp by measure. |
+| 2 | The cause is **data capture**, not worse care | **SUPPORTED.** The gap scales with how hard the data element is to capture (§2.5, 3.7× gradient), and the literature reproduces that ordering independently on the same patients — Bailey 2016 finds κ 0.96–1.00 for in-office values vs **κ 0.42 for breast cancer screening** (PMID 27522472). Case mix is affirmatively ruled out (§7.2): eCQM ACOs are not sicker, and the registry ACOs outscoring them are markedly sicker. |
+| 3 | Therefore **"CMS's eCQM benchmarks are systematically easier than MIPS CQM benchmarks"** | **PARTIALLY SUPPORTED — and FALSE for 001 and 236.** True where both sides carry observed benchmarks (median Decile 5 bar 14.7 pp easier). But CMS gives MIPS CQM a **flat** benchmark on 001 and 236, making the *registry* benchmark easier by **23.3 pp and 25.6 pp**. |
+| 4 | *(implied by our design)* The rate gap is what disadvantages eCQM reporters | **LARGELY UNSUPPORTED.** Because CMS benchmarks each collection type against its own distribution, the average eCQM reporter earns a **higher** decile than the average registry reporter in **54 of 72** measure-years (mean +1.36 deciles) — often over-correcting. |
 
-**The correction that matters most for the app.** `src/PathwayLab.tsx:942` currently says
-"CMS's easier electronic benchmarks bake in both effects." That is not true of the two
-APP Plus **outcome** measures — 001 and 236 — which are exactly the measures that carry
-the 10th-percentile outcome gate. There, eCQM reporters are hit twice: they measure lower
-*and* they are scored against a harder ladder, because their registry counterparts get a
-lenient flat benchmark. See §2.4.
+### The three corrections that matter
 
-**The magnitude correction.** Our single global 85% capture slider is not well calibrated.
-Backing capture efficiency out of real PY2024 MSSP data gives **68.5%–99% depending on the
-measure and comparator** (§3.4). The measure-to-measure spread is larger than the entire
-slider range we expose, and a single global value cannot reproduce it.
+**1. The rate gap and the score gap are different things (§2.8).** CMS's collection-type-specific
+benchmarking neutralizes, and frequently over-corrects, the raw-rate gap. On measure 134 an
+eCQM reporter at 45.6% earns **Decile 6** while a registry reporter at 85.6% earns **Decile 3**.
+The flattering registry rate scores *worse*. Our narrative implies the opposite.
 
-**Where our model is conservative in a way we should keep:** we model capture loss as a
-pure numerator effect and note in the UI that denominator leakage is unmodeled and
-probably flatters rates. That is the right sign — see §5.
+**2. The real eCQM penalty in APP Plus is a flat-benchmark artifact, not a capture artifact.**
+For the two intermediate-outcome measures that carry the outcome gate:
+
+| Measure | avg eCQM reporter | avg MIPS CQM reporter | Δ |
+|---|---|---|---|
+| **001** | Decile 4 (historical ladder) | **Decile 8** (flat ladder) | **−4 deciles** |
+| **236** | Decile 5 (historical ladder) | **Decile 7** (flat ladder) | **−2 deciles** |
+| 112 / 113 | Decile 5 | Decile 5 | 0 |
+| 134 | Decile 6 | Decile 3 | **+3** |
+
+So the correct causal chain is:
+`capture loss → lower eCQM rate → usually neutralized by collection-type benchmarks →
+EXCEPT on 001 & 236, where MIPS CQM's flat benchmark fails to neutralize it → 2–4 deciles lost.`
+
+**3. Our functional form is exactly CMS's arithmetic (§4.1a) — a genuine validation.** CMS's own
+APP guidance works a 1,000-patient example in which identical care yields **eCQM 74% vs
+MIPS CQM 78%**, because undeterminable patients are scored "Performance Not Met" in an eCQM
+but dropped from the MIPS CQM performance-rate denominator. That rule implies
+`eCQM/MIPS CQM = (1−u)`, i.e. `measured = true × capture` — precisely `captureLoss()` at
+`PathwayLab.tsx:197`. Verified numerically to 6 decimal places. The inverse branch for 001
+derives identically.
+
+### Calibration and caveats
+
+- **Our 85% global slider is not well calibrated.** Implied capture from real PY2024 MSSP data
+  is **68.5%–99%** depending on measure and comparator (§3.4) — a spread wider than our entire
+  slider range. 85% is about right against chart abstraction, too pessimistic against registry.
+- **A large part of the *national benchmark* gap is reporter selection, not capture** (§7.3):
+  eCQM reporters sit in practices ~6.6× larger, and the eCQM benchmarks in force were built
+  from as few as 12–72 early-transition ACOs (§7.4). We read the whole national gap as capture.
+- **Treating MIPS CQM as ground truth is an idealization the literature does not support**
+  (§6.5). Homco 2020 found latent-class truth for BP control matched the **EHR (75.0%)**, not
+  the abstraction (80.6%); physician abstractors agree with each other only at κ=0.75.
+- **Denominator leakage flatters eCQM rates** (§5.1), so it works *against* the observed gap —
+  our estimate is conservative, and our UI note on this has the right sign.
+- **CMS never states in rulemaking that eCQM capture lowers rates** (§4.6). Its rulemaking
+  attributes ACO score drops to the **all-payer denominator**, and its stated reason for
+  collection-type benchmarks is **non-comparable specifications** — not lower eCQM rates. CMS
+  has separately called eCQM structured capture "**more accurate**" than chart abstraction
+  (82 FR 38357).
 
 ---
 
@@ -821,7 +856,245 @@ leakage) working *against* the gap, our estimate is more likely conservative tha
 
 ## 6. Task 3 — The mechanism literature
 
-*(pending — see agent findings integration)*
+**Verdict: the direction is well established but measure-specific, and the literature
+independently reproduces the gradient I found in §2.5. Two important qualifications: the
+ambulatory canon is old, and chart abstraction is not a gold standard.**
+
+All PMIDs below were verified against PubMed on 2026-08-09. Where I did not read the full
+text, findings are attributed to the research agent's reading.
+
+### 6.1 The gradient, confirmed independently — the key literature finding
+
+**Bailey SR, Heintzman JD, Marino M, et al. "Measuring Preventive Care Delivery: Comparing
+Rates Across Three Data Sources." *Am J Prev Med.* 2016;51(5):752-761.
+doi:10.1016/j.amepre.2016.07.004. PMID 27522472.** 43 community health centers, EHR
+extraction vs manual chart review:
+
+| Service | agreement (κ) |
+|---|---|
+| In-office measurement (BMI, BP) | **0.96 – 1.00** |
+| Colorectal cancer screening | **0.62** |
+| **Breast cancer screening** | **0.42** |
+
+The authors attribute the difference to "services commonly referred out."
+
+**This is the single most important citation in this document.** It is an independent,
+patient-level confirmation of exactly the pattern I computed from benchmark files in §2.5 —
+near-perfect agreement for internally-generated structured values, degrading sharply for
+services performed elsewhere — and it maps directly onto MIPS 236 (BP, small gap) versus
+112/113 (breast/colorectal, large gaps).
+
+Corroborating the interoperability mechanism: **D'Amore JD, McCrary LK, Denson J, et al.
+"Clinical data sharing improves quality measurement and patient safety." *J Am Med Inform
+Assoc.* 2021;28(7):1534-1542. doi:10.1093/jamia/ocab039. PMID 33712850** — 53 organizations,
+5,300 patients, 14 measures: **79% of patients received care at more than one facility in
+the year; adding HIE data changed 15% of all measure calculations (P<.001)**, affecting 19%
+of patients.
+
+### 6.2 Direction and magnitude — head-to-head, same patients
+
+| Study | Setting | Measure | eCQM vs abstraction |
+|---|---|---|---|
+| **Kern 2013** (PMID 23318309) | FQHC, 1,154 pts, 12 measures | asthma medication | **−39 pp** (38% vs 77%) |
+| | | pneumococcal vaccination | **−21 pp** (27% vs 48%) |
+| | | diabetes cholesterol control | **+20 pp — eCQM HIGHER** (57% vs 37%) |
+| **Phipps 2016** (PMID 26951273) | VA, 2,130 stroke admissions, 11 hospitals | STK-1 VTE prophylaxis | **−10.6 pp** (76.7 vs 87.3, p=0.03) |
+| | | STK-2/5/10, NIHSS | −0.6 to −2.5 pp, all ns |
+| **Homco 2020** (PMID 32721028) | 21 practices, 621 pts | BP control | **−5.5 pp** (75.1 vs 80.6) |
+| | | smoking counseling | **−10.3 pp** (75.4 vs 85.7) |
+| | | aspirin | −1.1 pp |
+| **Urech 2015** (PMID 26340661) | VA, 2,840 HTN pts | BP control | **−2.7 pp** (66.8 vs 69.5, κ=0.87) |
+| | | guideline-recommended meds | **−7.3 pp** (65.0 vs 72.3, κ=0.51) |
+| | | appropriate response to uncontrolled BP | **−12.4 pp** (39.8 vs 52.2, κ=0.28) |
+| **Baker 2007** (PMID 17310051) | outpatient heart failure | warfarin for AF | **−23.2 pp** (70.4 vs 93.6) |
+| | | LVEF, beta-blocker, ACE/ARB | −2.7 to −4.8 pp |
+| **Amster 2015** (PMID 25326598) | Kaiser Permanente NW | NQF 0012 | **−25.4 pp** (62.9 vs 88.3) |
+| | | NQF 0137 | **−100 pp** (0% vs 100%) |
+
+Kern's sensitivity across 12 measures was **46–98%** — the spread itself is the finding.
+
+**Schmaltz S, Vaughn J, Elliott T. "Comparison of electronic versus manual abstraction for 2
+standardized perinatal care measures." *J Am Med Inform Assoc.* 2022;29(5):789-797.
+doi:10.1093/jamia/ocab276. PMID 34918098** is the best modern same-patient study (Joint
+Commission ORYX, 68,015 matched Elective Delivery records across 270 hospitals). Its result
+is a sharp illustration that the gap is element-specific, not method-wide:
+
+- **Elective Delivery numerator κ = 0.08 (2017), 0.10 (2019)** — essentially no agreement
+  beyond chance.
+- **Exclusive Breast Milk Feeding numerator κ = 0.85 / 0.84** — near-perfect.
+- Denominator agreement *improved* over time (ED 0.59→0.84; EBMF 0.58→0.70).
+
+Note the last point: **denominators behaved better than numerators**, consistent with §5.3.
+
+**Persell SD, Wright JM, Thompson JA, Kmetik KS, Baker DW. "Assessing the validity of
+national quality measures for coronary artery disease using an electronic health record."
+*Arch Intern Med.* 2006;166(20):2272-2277. doi:10.1001/archinte.166.20.2272. PMID 17101947**
+quantifies the narrative-documentation mechanism directly: **15% to 81% of apparent quality
+failures were actually satisfied or validly excluded** once free text was read. LDL control
+rose from 81.6% to 87.5–99.2%.
+
+### 6.3 The NCQA HEDIS ECDS analogue — the closest thing to a controlled experiment
+
+NCQA's transition from hybrid (administrative + chart review) to Electronic Clinical Data
+Systems reporting is the same natural experiment as ours, with paired same-plan/same-year
+submissions. Reported by the research agent from NCQA Special Reports (grey literature —
+**PubMed returns 0 results for `"ECDS" AND "HEDIS"`**, which is itself a finding):
+
+- **MY2021 colorectal cancer screening (COL):** ECDS 54.4 vs traditional 60.1 commercial
+  (**−6.2 pp**); 60.5 vs 70.7 Medicare (**−9.3 pp**).
+- **MY2023 decomposition — the cleanest result:** administrative ≈ identical to ECDS, while
+  **hybrid was higher by 5.2 pp (commercial) / 6.3 pp (Medicare)**. In other words **the gap
+  *is* the chart review**, not the electronic capture.
+- **Breast cancer screening (BCS-E) vs administrative: −0.1 to −0.5 pp** — negligible. (The
+  agent flags a premise correction worth keeping: BCS was never a HEDIS *hybrid* measure, so
+  this is an admin↔ECDS comparison, not a chart-review comparison.)
+- **MY2020 depression screening (DSF-E): claims-only plans reported mean, median AND max of
+  0.0%**, versus 2.9–11.4% for plans with any non-claims data.
+
+Historical anchor: **Pawlson LG, Scholle SH, Powers A. "Comparison of administrative-only
+versus administrative plus chart review data for reporting HEDIS hybrid measures." *Am J
+Manag Care.* 2007;13(10):553-558. PMID 17927459** — 283 plans, 15 hybrid measures:
+administrative-only was lower on **every** measure by an average of **20.4 pp (2004) and
+20.6 pp (2006)**, and **more than half of plans changed quartile rank** by method.
+
+**The trend line matters for calibration:** ~20 pp in 2004–2006, ~5–6 pp by MY2023.
+Electronic clinical data has recovered roughly two-thirds of what chart review used to add.
+This argues our capture penalty should be modeled as *shrinking over time*, and reinforces
+§7.4's concern that benchmarks built from early-transition cohorts overstate it.
+
+### 6.4 Causes, ranked by evidence strength
+
+1. **Care delivered outside the reporting organization** — strongest. Bailey 2016 (κ 0.42
+   breast / 0.62 colorectal vs 0.96–1.00 in-office); D'Amore 2021 (79% multi-facility, 15%
+   of calculations changed); O'Connor 2010 (PMID 20225917) — adding immunization registry
+   data raised observed rates **6.5–54.1 pp** (childhood) and **57.6–78.0 pp** (adolescent).
+2. **Unstructured / free-text documentation** — very strong. **Parsons A, McCullough C,
+   Wang J, Shih S. "Validity of electronic health record-derived quality measurement for
+   performance monitoring." *J Am Med Inform Assoc.* 2012;19(4):604-609.
+   doi:10.1136/amiajnl-2011-000557. PMID 22249967** — 4,081 charts, 57 NYC practices: **only
+   10.7% of mammogram orders/results were in structured fields**; labs 53.4–63.0%; smoking
+   status 53.4%; problem-list diagnoses 75.1–91.4%. *Caveat flagged by the agent: Parsons's
+   "1.8 vs 2.7" figures are mean patient counts per practice, not rates — because both
+   numerator and denominator shrink, the net effect on the rate is ambiguous. Do not quote
+   them as percentage-point gaps.* Also Persell 2006 and Baker 2007 above; **Roth CP, Lim YW,
+   Pevnick JM, Asch SM, McGlynn EA. *Am J Med Qual.* 2009;24(5):385-394. PMID 19482968** —
+   only ~1/3 of QA Tools indicators readily accessible from EHR data.
+3. **Workflow / field placement / denominator identification** — strong. **Wright A, McCoy
+   AB, Hickman TT, et al. "Problem list completeness in electronic health records: A
+   multi-site study and assessment of success factors." *Int J Med Inform.*
+   2015;84(10):784-790. doi:10.1016/j.ijmedinf.2015.06.011. PMID 26228650** — across 10
+   organizations, the share of patients with HbA1c ≥7.0% who had diabetes on the problem list
+   ranged **60.2% to 99.4% (mean 78.2%)**. Up to 40% of a diabetes denominator can be
+   invisible from documentation habit alone. **Tang PC, Ralston M, Arrigotti MF, et al.
+   *J Am Med Inform Assoc.* 2007;14(1):10-15. doi:10.1197/jamia.M2198. PMID 17068349** —
+   claims-style denominator logic found **75%** of true diabetics vs **97%** using EHR coded
+   data.
+4. **Value-set / terminology mismatch** — good evidence; modest on global rates, large on
+   subgroups. **Cholan RA, et al. *EGEMS.* 2017;5(1):19. doi:10.5334/egems.212.
+   PMID 29881739** — two independently authored value sets for the *same* statin CQM differed
+   only **0.8 pp** globally but included **up to 2.3× as many patients** with key conditions,
+   and subgroup performance differed **7.5 pp**. Also Baumann Kreuziger 2025 (PMID 39930618),
+   Dorr 2021 (PMID 34348408) — 60% of required concept sets unused or inaccurate.
+5. **EHR vendor / implementation variation** — mechanism documented, **direct rate comparison
+   never published**. No study implements one eCQM spec across multiple named vendors and
+   reports divergent rates. Closest: Ahmad 2019 (PMID 32025638, 116 practices across 7 EHRs)
+   and D'Amore 2018 (PMID 29898468, 11 facilities / 5 EHRs, iterative fixes needed for 14 of
+   17 measures).
+6. **Timing / lookback** — weakest. **Colin NV, et al. *EGEMS.* 2018;6(1):17.
+   doi:10.5334/egems.235. PMID 30094289** — 209 practices: between-clinic differences ranged
+   −3.3% to +14.2%, but patient-level recomputation *within* clinics showed only **−1.6% to
+   +0.6%**, i.e. most of the apparent period effect was data-quality noise. The
+   historical-screening story (screening done pre-EHR-adoption) is widely asserted but
+   **no study isolates and quantifies it**.
+
+### 6.5 Counterexamples and the abstraction-is-not-truth problem
+
+These deserve prominence, because our model treats registry/abstraction as ground truth.
+
+1. **Kern 2013**: diabetes cholesterol control **57% electronic vs 37% manual (+20 pp,
+   P=0.001)** — eCQM measured *higher*.
+2. **Homco 2020** (PMID 32721028): Bayesian latent-class analysis put the truth for BP
+   control at **75.0%**, matching the **EHR (75.1%)** and *below* chart abstraction (80.6%).
+   **Abstraction, not the eCQM, was the biased estimator.** This is directly about MIPS 236.
+3. **Goulet JL, Erdos J, Kancir S, et al. "Measuring performance directly using the veterans
+   health administration electronic medical record: a comparison with external peer review."
+   *Med Care.* 2007;45(1):73-79. doi:10.1097/01.mlr.0000244510.09001.e5. PMID 17279023** —
+   where values are natively structured, correlations **0.89–0.98**, κ **0.86–0.99**, and
+   **no clinically meaningful bias** (LDL 0.9 mg/dL, SBP 1.2 mmHg, no difference for HbA1c).
+4. **Warner JL, Anick P, Drews RE. "Physician inter-annotator agreement in the Quality
+   Oncology Practice Initiative manual abstraction task." *J Oncol Pract.* 2013;9(3):e96-e102.
+   doi:10.1200/JOP.2013.000931. PMID 23942509** — two physician abstractors on the same 49
+   charts agreed at only **κ=0.75**; dated elements only 73% raw agreement. **Manual
+   abstraction is a second noisy measurement, not a gold standard.**
+5. **Boussina A, et al. *NEJM AI.* 2024;1(11). PMID 39703686** — versus 100 SEP-1
+   abstractions UCSD actually reported to CMS, expert adjudication found **4 of the 10
+   discordances were errors by the human abstractors**.
+6. **Krause TM, Ganduglia-Cazaban C, Finkel KW. *Manag Care.* 2018;27(8):45-49.
+   PMID 30142069** — 28.3M lives: an ACE/ARB pathway contributed 14–16% of a diabetic
+   nephropathy numerator with only 1% having microalbuminuria evidence. **Claims/registry
+   measures can overstate**, so "registry higher" ≠ "registry correct."
+
+**Implication for our model:** treating MIPS CQM as `underlying` (true care) is an
+idealization the literature does not support. Registry/abstraction rates are biased *upward*
+in at least some settings.
+
+### 6.6 Corroboration of my topped-out finding
+
+**Golding LP, Nicola GN, Duszak R, Rosenkrantz AB. "The Quality Measure Crunch: How CMS
+Topped Out Scoring and Removal Policies Disproportionately..." *J Am Coll Radiol.*
+2020;17(1 Pt B):110-117. doi:10.1016/j.jacr.2019.08.014. PMID 31918866** — the only
+peer-reviewed paper quantifying MIPS performance differences by collection type. Percent of
+measures topped out: **claims 82.7%, registry 60.4%, eCQM 11.6% (P<.001)**.
+
+This independently corroborates my 40:0 topped-out asymmetry (§2.6) using a different year
+and method.
+
+### 6.7 Where the evidence is thin — state plainly
+
+- **The ambulatory canon is old.** Kern (2013), Parsons (2012), Chan (2010), Roth (2009),
+  Persell (2006), Baker (2007), Tang (2007) predate modern certified EHRs, FHIR, and
+  near-universal e-prescribing and lab interfaces. **There is no post-2020 replication of
+  Kern at comparable scale.**
+- **No systematic review of eCQM vs chart-abstraction validity exists.** Chan KS, Fowles JB,
+  Weiner JP. *Med Care Res Rev.* 2010;67(5):503-527. PMID 20150441 reviewed 35 studies of
+  EHR *data quality*, not eCQM measure validity, and is 16 years old.
+- **No peer-reviewed study exists on the MSSP Web Interface → APP eCQM/MIPS CQM transition.**
+  Everything on the exact question our simulator models is CMS primary data, rulemaking, or
+  my own computation.
+- **No peer-reviewed study reports MIPS scores by collection type in points.** Golding 2020
+  is the sole direct paper. The agent verified in full text that Bond 2022 (*JAMA*,
+  PMID 36472595) and Khullar 2020 (*JAMA*, PMID 32897345) do **not** stratify by submission
+  method; Chung 2026 (*Health Aff Sch*, PMID 41982632) explicitly declines to.
+- **No cross-vendor rate-divergence study exists.**
+- **No same-patient validity study exists for depression screening (MIPS 134)** — despite it
+  showing the largest gap in every dataset here (−40.0 to −44.0 pp in benchmarks, −25.7 pp in
+  MSSP, 0.0% for claims-only HEDIS plans). The mechanism evidence is qualitative only:
+  Morden 2022 (PMID 34648936) and Liu 2019 (PMID 31622072), the latter finding **40–46% had
+  screening documentation but standardized tools were rarely used** — the *service* occurs
+  while the *structured standardized result* does not.
+- **CMS eCQM validation agreement rates are confidential.** The only public figures, FY2025
+  IPPS final rule (89 FR 69574): FY2024 national average **~90%**, ranging **~84% (STK-3)** to
+  **~94% (STK-5)**, with CMS warning these rest on two quarters of data from long-established
+  eCQMs and "may decrease."
+
+### 6.8 The literature's own suggested framing — which matches my §2.5 gradient
+
+The research agent proposed a three-tier model derived independently from the literature.
+Set against my benchmark-derived gradient:
+
+| Measure type | Literature estimate | My benchmark gradient (§2.5) |
+|---|---|---|
+| Natively structured, internal (236 BP, A1c value) | **0 to −7 pp** | groups 1–3: **+6.7 pp** |
+| Referred out / historical (112, 113) | **−6 to −13 pp** | group 5: **+23.1 pp** |
+| Patient-reported instrument / judgment in notes (134) | **−20 to −41 pp** | group 6: **+26.4 pp** |
+
+The two agree closely at the structured end and on rank order. My benchmark-derived middle
+tier is larger than the literature's, which is expected: benchmark files carry the
+reporter-selection inflation documented in §7.3, while the literature studies are
+same-patient.
+
+**This convergence — two independent methods producing the same rank ordering — is the
+strongest support in this document for the capture mechanism.**
 
 ---
 
@@ -1031,13 +1304,16 @@ different levels.
 
 ## 8. What we should change in the app
 
-| # | Change | Basis |
-|---|---|---|
-| 1 | **Fix the "easier electronic benchmarks" claim** (`src/PathwayLab.tsx:942`). It is false for 001 and 236, where the MIPS CQM flat ladder is easier by 23.3 and 25.6 pp. Say instead: eCQM reporters measure lower on every APP Plus measure, *and* on 134/112/113 the eCQM benchmark is correspondingly easier — but on 001 and 236 the flat MIPS CQM benchmark is far more lenient, so eCQM reporters are penalized twice. | §2.4 |
-| 2 | **Make capture measure-specific, or widen and re-label the slider.** Implied capture ranges 68.5%–99% by measure/comparator; our 65–100% range is fine but a single global value is not. Suggested per-measure anchors vs abstraction: 134 ≈ 68%, 001 ≈ 78%, 236 ≈ 89%. | §2.5, §3.4 |
-| 3 | **Re-label what MIPS CQM means in the model.** We treat it as ground truth ("abstraction finds the evidence"). Within MSSP, registry reporters are only 0.5–7.9 pp better than eCQM reporters — the *Web Interface* was the true high-water mark, and it is gone after PY2024. Calling MIPS CQM "true care rate" overstates it. | §3.2 |
-| 4 | **Keep the denominator caveat, and keep it unmodeled.** Our UI note that uncoded patients vanish and that this "often flatters rates" has the right sign. | §5 |
-| 5 | Consider surfacing the **topped-out asymmetry** (40 : 0) — it is a vivid, one-line way to show the method effect is real. | §2.6 |
+| # | Change | Priority | Basis |
+|---|---|---|---|
+| 1 | **Fix the "easier electronic benchmarks" claim** (`src/PathwayLab.tsx:942`). It is false for 001 and 236, where the MIPS CQM *flat* ladder is easier by 23.3 and 25.6 pp. Replace with: eCQM reporters measure lower on all five APP Plus measures, but that only costs points on **001 and 236**, because CMS flat-benchmarks MIPS CQM there and the flat ladder is lenient. On 134 the eCQM benchmark is so much easier that eCQM reporters score **3 deciles higher** despite a 40 pp worse rate. | **high** | §2.4, §2.8 |
+| 2 | **Separate "rate effect" from "score effect" in the UI.** This is the single biggest conceptual gap. The capture slider should visibly move the *rate*, and the benchmark ladder should then visibly decide whether that costs any *points*. Right now the app implies rate loss ⇒ point loss, which is false in 54 of 72 measure-years. | **high** | §2.8 |
+| 3 | **Make capture measure-specific.** Implied capture is 68.5%–99% depending on measure — wider than our whole slider range. Suggested anchors vs abstraction: **134 ≈ 68%, 001 ≈ 78%, 236 ≈ 89%**; 112/113 in between. Both my benchmark gradient and the literature's three-tier model support this. | **high** | §2.5, §3.4, §6.8 |
+| 4 | **Stop calling MIPS CQM the true care rate.** `measuredRate()` returns `underlying` unchanged for `mipscqm` with the comment "abstraction finds the evidence." The literature says abstraction is itself biased upward (Homco: latent-class truth matched the *EHR*; abstractor-vs-abstractor κ=0.75). Re-label as "comparator/registry-reported rate," not truth. | medium | §6.5 |
+| 5 | **Add a note that the eCQM benchmarks are built from an early-transition cohort** (12–72 ACOs in the relevant baseline years) and may overstate the steady-state capture penalty — NCQA's analogous gap fell from ~20 pp (2004) to ~5–6 pp (MY2023). | medium | §7.4, §6.3 |
+| 6 | **Keep the denominator caveat, and keep it unmodeled.** The UI note that uncoded patients vanish and that this "often flatters rates" has the right sign and makes our estimate conservative. | keep as-is | §5.1 |
+| 7 | Consider surfacing the **topped-out asymmetry** (40 : 0 across four years; corroborated by Golding 2020 at 11.6% vs 60.4%) — a vivid one-line demonstration that the method effect is real. | nice-to-have | §2.6, §6.6 |
+| 8 | If we ever cite literature in-app, cite **Bailey 2016 (PMID 27522472)** — κ 0.96–1.00 for in-office values vs 0.42 for breast cancer screening is the cleanest published statement of our mechanism. Do **not** cite Kern 2013 as evidence eCQMs under-measure; it found the opposite for one measure. | nice-to-have | §6.1, §6.5 |
 
 ---
 
@@ -1069,3 +1345,25 @@ different levels.
    404 — use `GET`.
 8. **Suppression in B5 is not characterized.** 30 ACOs report no rate on any of the three
    measures; I did not determine whether suppression is random with respect to performance.
+9. **Provenance of individual findings.** Everything in §2, §3 and §7.1–7.2 is my own
+   computation from B1–B6 and is reproducible from the scripts and derived CSVs. §4 and §6,
+   and the reporter-size/participation figures in §7.3–7.7, come from research agents; I
+   verified all 18 PMIDs against PubMed and spot-checked the CMS arithmetic in §4.1a, but I
+   did **not** read the full text of the cited papers or independently reproduce the QPP
+   Experience PUF analysis in §7.3. Those are attributed in place.
+10. **A caution about joining on `Measure ID`.** One agent reported that measures 112 and 113
+    "have no 2025 benchmark rows." That is **wrong**, and the error is instructive: in the
+    PY2024–PY2026 files those measures are published as
+    `112 (Not available in Traditional MIPS)`, so a literal join on `"112"` silently drops
+    them. My §2.4 values for 112/113 in PY2025 (eCQM 56.08 / 49.80 vs MIPS CQM 69.16 / 71.31)
+    are verified directly against the raw CSV. Always normalize the ID before joining.
+11. **The §2.8 decile computation places the *average* reporter**, which is not the same as
+    the average of reporters' deciles (Jensen's inequality). It answers "where does a typical
+    reporter land," not "what is the mean decile earned." The direction of the finding is
+    robust — 54:3 is not a close call — but do not quote "+1.36 deciles" as a mean score
+    difference.
+12. **No within-organization, same-year, both-methods comparison exists anywhere** — not in the
+    MSSP PUF (only 3 such ACOs, and no indication they covered the same population) and not in
+    the peer-reviewed literature for MIPS collection types. This is the missing experiment that
+    would settle capture-vs-selection cleanly, and its absence is the main reason claim 2 is
+    "supported" rather than "established."

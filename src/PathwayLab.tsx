@@ -943,9 +943,15 @@ export default function AppPlusPathwayLab() {
                   models the numerator: care counts only as coded proof, so uncoded care reports as failure (001
                   counts a missing result as poor control, so its rate rises). Not modeled: patients whose diagnoses
                   or encounters are never coded vanish from the measure entirely — that often flatters rates, since
-                  invisible patients skew unscreened and uncontrolled. CMS's easier electronic benchmarks bake in
-                  both effects. Pins are labeled assumptions ("top-rung" ≈ capture needed for the best eCQM deciles);
-                  a collapse breaking the 75% completeness rule is the "reporting failure" checkbox below.
+                  invisible patients skew unscreened and uncontrolled. The multiply-by-capture rule is CMS's own
+                  arithmetic — its APP guidance works a 1,000-patient example where identical care measures 74% as an
+                  eCQM and 78% as a MIPS CQM. Measured nationally, eCQM rates run a median 12.3 points lower and do so
+                  in 23 of 23 measures. But a lower rate is not automatically a lower score: each collection type is
+                  benchmarked against its own distribution, so the average eCQM reporter actually earns a HIGHER
+                  decile in 54 of 72 measure-years — except on 001 and 236, where MIPS CQM's flat ladder breaks that
+                  absorption and costs eCQM reporters 2–4 deciles. Pins are labeled assumptions ("top-rung" ≈ capture
+                  needed for the best eCQM deciles); a collapse breaking the 75% completeness rule is the "reporting
+                  failure" checkbox below.
                 </Info>
               </div>
               <div>
@@ -1091,9 +1097,11 @@ export default function AppPlusPathwayLab() {
             <Info summary="reading the cards · 2026 quirks">
               Each ladder is the method's real 2026 benchmark — hover a rung for its cutpoints; taller rung = wider
               scoring band; "measured" is the care slider after the Step 3 adjustments.{" "}
-              Care-rate chips jump to registry-reported percentiles — real chart-review rates with no capture loss
-              (001/134/236: CMS's 2026 Medicare CQM tables from actual ACO submissions; 112/113: the 2025 MIPS CQM
-              file; 001's percentiles are of performance, so lower is better). Quirks: 112/113 have no published 2026
+              Care-rate chips jump to registry-reported percentiles — chart-review rates, which carry no
+              structured-capture loss and so stand in here for true care (001/134/236: CMS's 2026 Medicare CQM tables
+              from actual ACO submissions; 112/113: the 2025 MIPS CQM file; 001's percentiles are of performance, so
+              lower is better). Treat that as a convention, not ground truth: at least one validation study found
+              latent-class "true" BP control closer to the EHR value than to the abstraction. Quirks: 112/113 have no published 2026
               benchmark under eCQM or MIPS CQM (dashed ladders; excluded from both earned points and the denominator
               per 42 CFR 414.1367(c)(1)(i)); 134 under MIPS CQM is capped at 7 points (dashed red line); 001 counts a
               bad outcome, so lower is better; the Medicare CQM ladders for 001/134/236 are built from real ACO
@@ -1272,7 +1280,12 @@ export default function AppPlusPathwayLab() {
               artifact of this model — CMS said so when it created collection-type benchmarks: "assigning separate
               benchmarks in this manner creates opportunities for clinicians to achieve higher quality scores by
               selectively choosing submission mechanisms; …we intend to monitor for such activity and to report
-              back" (81 FR 77278, 2016). No such report-back appears in the nine subsequent rules searched.
+              back" (81 FR 77278, 2016). No such report-back appears in the nine subsequent rules searched. Why the
+              search so often routes 001 and 236 to MIPS CQM: benchmarking each collection type against its own
+              distribution normally absorbs the eCQM capture gap — nationally the average eCQM reporter earns a
+              higher decile than the average registry reporter in 54 of 72 measure-years — but on exactly these two
+              measures MIPS CQM's flat ladder replaces that distribution, handing registry reporters 2–4 deciles the
+              eCQM ladder makes them earn.
             </Info>
           </Panel>
 
