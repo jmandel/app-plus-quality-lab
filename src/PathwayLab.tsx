@@ -1128,6 +1128,16 @@ export default function AppPlusPathwayLab() {
                   <StatusLamp on={mach.outcomeOK} label="An outcome measure (001, 236, or claims) beat the bottom 10%" />
                   <StatusLamp on={mach.otherOK} label="Another of the remaining seven (incl. CAHPS + claims) hit the 40th percentile" />
                 </div>
+                <Info summary="what these percentiles are measured against">
+                  Both are percentiles <b>of the performance benchmark</b> (42 CFR 425.512(a)(5)(i)(B)(2)) — that is,
+                  which decile your measured rate lands in: decile 2+ clears the 10th percentile, decile 5+ clears the
+                  40th. What that means as an actual rate depends entirely on the cell, because the ladder does.
+                  Measure 236 needs <b>≥45.3%</b> BP control to clear the 10th percentile under eCQM, where the ladder
+                  is a real distribution of eCQM reporters — but only <b>≥10%</b> under MIPS CQM, whose flat ladder is
+                  a policy-set percentage rather than a percentile of anyone. So the same condition is a genuine bar
+                  in one cell and nearly free in another. CAHPS and the two claims measures arrive as decile points
+                  already, so 2+ and 5+ apply to them directly.
+                </Info>
               </div>
               <div style={{ border: `1.5px solid ${mach.deemed ? T.line : mach.q >= QPS ? T.pass : T.fail}`, background: "#fff", borderRadius: 4, padding: "6px 10px", opacity: mach.deemed ? 0.55 : 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 10, ...mono, marginBottom: 3 }}>

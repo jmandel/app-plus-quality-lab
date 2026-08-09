@@ -297,6 +297,61 @@ Only **4 of 80** measure-years show eCQM measuring *better*:
 
 No counterexample exceeds 2.7 pp once the respecification is set aside.
 
+### 2.8 Does the rate gap become a *score* gap? Mostly no — except on 001 and 236
+
+This is the most consequential thing in this document, and it is easy to miss: a lower
+*rate* is not a lower *score*, because CMS benchmarks each collection type against its own
+distribution. To test it I placed each collection type's own Average Performance Rate into
+its own published decile ladder and compared the deciles earned.
+
+**Across all 72 Tier A measure-years:**
+
+| Result | count |
+|---|---|
+| eCQM average reporter earns a **higher** decile | **54 / 72** |
+| tied | 15 / 72 |
+| eCQM earns a **lower** decile | **3 / 72** |
+
+Mean **+1.36 deciles in eCQM's favor**; median +1.0. Restricted to pairs where MIPS CQM is
+*not* topped out (n=21): mean +0.62, median 0.0 — i.e. roughly neutral.
+
+So collection-type-specific benchmarking does not merely neutralize the rate gap, it
+frequently **over-corrects**, because the eCQM benchmark is built from a compressed
+low distribution while the registry benchmark is topped out. The clearest case is 134: an
+eCQM reporter at 45.55% earns **Decile 6**, while a MIPS CQM reporter at 85.58% earns
+**Decile 3**. The flattering registry rate scores *worse*.
+
+**But the APP Plus five do not follow the general pattern**, because 001 and 236 carry flat
+MIPS CQM ladders:
+
+| Measure | Year | eCQM rate → decile | MIPS CQM rate → decile | Δ deciles | Favored |
+|---|---|---|---|---|---|
+| **001** | 2026 | 40.91 → **D4** (Historical) | 23.12 → **D8** (Flat) | **−4** | MIPS CQM |
+| **001** | 2023–25 | 46.35/43.53/42.70 → D4 | 34.00/27.30/25.75 → D7/D8/D8 | −3/−4/−4 | MIPS CQM |
+| **236** | 2026 | 66.06 → **D5** (Historical) | 68.71 → **D7** (Flat) | **−2** | MIPS CQM |
+| **236** | 2023–25 | 62.30/66.06/66.23 → D5 | 68.96/71.26/72.82 → D7/D8/D8 | −2/−3/−3 | MIPS CQM |
+| 112 | 2023–25 | 50.99/53.86/56.08 → D5 | 63.07/68.94/69.16 → D5 | 0 | tie |
+| 113 | 2023, 2025 | 49.64/49.80 → D5 | 56.97/71.31 → D5 | 0 | tie |
+| 134 | 2023–26 | ~39.95–48.51 → **D6** | ~83.32–89.55 → **D3** | **+3** | eCQM |
+
+**This identifies the real mechanism of the eCQM disadvantage in APP Plus, and it is not the
+one we assert.** The capture tax lowers eCQM *rates* on all five measures. But that only
+becomes lost *points* on 001 and 236 — and it does so because CMS gives MIPS CQM a **flat**
+benchmark on exactly those two measures, so registry reporters are scored against a lenient
+synthetic ladder while eCQM reporters are scored against their own real, harder distribution.
+On 112/113 the effect washes out entirely, and on 134 it runs strongly in eCQM's favor.
+
+So the correct causal chain is:
+
+```
+capture loss  →  lower eCQM rate  →  (usually neutralized by collection-type benchmarks)
+                                  →  BUT on 001 & 236, MIPS CQM's flat benchmark
+                                     fails to neutralize it  →  2–4 deciles lost
+```
+
+Our simulator's narrative — "capture loss is why CMS's eCQM benchmarks are easier" — has the
+sign of the rate effect right and the benchmark consequence backwards.
+
 ---
 
 ## 3. A stronger test than the benchmark files: PY2024 MSSP ACO-level results
