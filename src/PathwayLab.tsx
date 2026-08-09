@@ -348,7 +348,7 @@ function benchBadge(bench: Bench): { label: string; why: string } {
   if (bench.kind === "flat percentage") return { label: "FLAT · clinical guardrail", why: "Flat by rule, not data — 42 CFR 414.1380(b)(1)(ii)(C), finalized in the CY2020 PFS final rule. CMS applies flat bands to collection types whose top decile exceeds 90% (or falls under 10% for an inverse measure), re-tested every year, and says why: \"if the top decile was originally below 90 percent, using the flat percentages would actually raise the level up to 90 percent, and therefore, provide a stronger incentive to provide inappropriate care\" (84 FR 63015). The last pre-flat data (PY2019) passes the test exactly: measure 236's top decile was 100% under MIPS CQM and 94.9% under claims — both flattened — versus 82.2% under eCQM, which kept its graded curve. Not a permanent exemption: CMS flattened 236 eCQM in PY2020 and reverted the next year." };
   if (bench.kind === "flat (finalized for PY26)") return { label: "FLAT · M-CQM policy", why: "Policy-set flat bands for a Medicare CQM's first two performance periods (CY2025 PFS final rule)." };
   if (bench.kind.startsWith("flat")) return { label: "FLAT · proposed rule", why: "CMS-1848-P proposes flat bands for all Medicare CQMs and the new Medicare eCQMs — not final (decision ~November 2026)." };
-  if (bench.kind === "historical (real ACO data)") return { label: "HISTORICAL · real ACOs", why: "Deciles of actual PY2024 ACO Medicare CQM submissions — the first year CMS had real ACO data for these measures. Note these distributions stayed below the flat-benchmark trigger (top decile above 90%, or below 10% inverse), so they kept a graded curve." };
+  if (bench.kind === "historical (real ACO data)") return { label: "HISTORICAL · real ACOs", why: "Deciles of actual PY2024 ACO Medicare CQM submissions — the first year CMS had real ACO data for these measures, and a pool of only ACOs rather than all MIPS clinicians. CMS calls this a \"tournament approach\": high-performing ACOs \"could earn lower measure achievement points relative to comparable MIPS groups because the Medicare CQM benchmarking pool is comprised of higher-than-average performance data\" (89 FR 98117). Same care, tougher room. CMS's stated alternative: \"ACOs that prefer to be compared to clinicians at large may do so by reporting eCQMs or MIPS CQMs.\"" };
   return { label: "HISTORICAL · peer curve", why: "Deciles of what real reporters scored nationally for this collection type in the baseline period." };
 }
 
@@ -1029,7 +1029,8 @@ export default function AppPlusPathwayLab() {
                   <span style={{ fontSize: 10.5, color: T.inkSoft, lineHeight: 1.45 }}>
                     <b>Apply pending proposed rule (on by default, not final):</b> score all Medicare CQM measures on
                     flat 10-point bands instead of the tougher real-data 2026 benchmarks for 001/134/236 (CMS-1848-P;
-                    final decision ~November 2026) — uncheck to see current law.
+                    final decision ~November 2026) — uncheck to see current law. CMS's own estimate: flat benchmarks
+                    would raise average ACO quality scores by <b>11 percentage points</b> (91 FR 44042).
                   </span>
                 </label>
                 <label style={{ display: "flex", gap: 7, alignItems: "flex-start", marginTop: 8, cursor: "pointer" }}>
@@ -1237,7 +1238,11 @@ export default function AppPlusPathwayLab() {
               saturates at the track cap, so the explored mix is the highest-score route to that money; the score
               still matters for public reporting, as the fallback if the automatic pass breaks, and for ENHANCED loss
               scaling. Row differences come from benchmark tables, capture losses, the 134 cap (ᶜ), and which methods
-              carry the automatic pass and the electronic bonus.
+              carry the automatic pass and the electronic bonus. That the row you pick moves the money is not an
+              artifact of this model — CMS said so when it created collection-type benchmarks: "assigning separate
+              benchmarks in this manner creates opportunities for clinicians to achieve higher quality scores by
+              selectively choosing submission mechanisms; …we intend to monitor for such activity and to report
+              back" (81 FR 77278, 2016). No such report-back appears in the nine subsequent rules searched.
             </Info>
           </Panel>
 

@@ -333,13 +333,13 @@ traditional-MIPS measures without a benchmark get **0** points (3 for small prac
 
 ### 2.5 The current-law preference, restated for ACOs
 
-CY2027 proposed rule quoting the CY2025 proposed rule (**91 FR 44040**, F9):
+CY2027 proposed rule quoting the CY2025 proposed rule (**91 FR 44041**, F9):
 
 > "As we stated in the CY 2025 PFS proposed rule (89 FR 61860), **the use of historical benchmarks,
 > when data are available, allows Shared Savings Program ACOs to know benchmarks prior to start of
 > the PY and create opportunities for improvement.**"
 
-CMS then proposes to *abandon* that preference for Medicare CQMs (§5.4), saying at **91 FR 44040**
+CMS then proposes to *abandon* that preference for Medicare CQMs (§5.4), saying at **91 FR 44041**
 (F9), **PROPOSED**:
 
 > "**We believe it is no longer logical to apply this benchmark methodology to Medicare CQMs** due to
@@ -867,7 +867,7 @@ beginning with the CY2026 performance period — retroactively converting Qualit
 which CMS *actually published* PY2026 historical benchmarks for. Proposed (G)(1) would apply flat
 benchmarks to the new Medicare eCQMs collection type from CY2027.
 
-Stated rationale — continuity through the digital transition (**91 FR 44040–44041**, F9):
+Stated rationale — continuity through the digital transition (**91 FR 44041**, F9):
 
 > "**Given the challenges and concerns that Shared Savings Program ACOs have shared regarding
 > navigating additional Shared Savings Program policy changes in a time of larger quality reporting
@@ -876,7 +876,7 @@ Stated rationale — continuity through the digital transition (**91 FR 44040–
 > flat benchmarks to score all Medicare CQMs for PY 2027 and subsequent PYs, and for Quality IDs 001,
 > 134, and 236 for PY 2026.**"
 
-Reversal of the historical-benchmark preference (**91 FR 44040**, F9):
+Reversal of the historical-benchmark preference (**91 FR 44041**, F9):
 
 > "**We believe it is no longer logical to apply this benchmark methodology to Medicare CQMs** due to
 > Shared Savings Program ACOs' concerns that quality-related changes are disruptive to the transition
