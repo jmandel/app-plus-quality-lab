@@ -1148,8 +1148,8 @@ export default function AppPlusPathwayLab() {
                 <b style={{ fontSize: 20, lineHeight: 1, color: fin.gross >= 0 ? T.money : T.debt }}>{fmt$(Math.abs(fin.gross))}</b>
                 <span style={{ color: T.inkFaint }}>spent {Math.abs(grossPct).toFixed(1)}% {fin.gross >= 0 ? "under" : "over"} the ${benchmarkM}M benchmark</span>
                 {fin.gross >= 0 && msr > 0 && (grossPct >= msr
-                  ? <span style={{ color: T.inkFaint, cursor: "help" }} title="Minimum savings rate: CMS shares nothing until savings beat this margin — a noise gate, sized by ACO population for one-sided BASIC tracks, electable down to 0% for two-sided.">qualifies: {grossPct.toFixed(1)}% ≥ {msr.toFixed(1)}% minimum savings rate ✓</span>
-                  : <span style={{ color: T.fail, fontWeight: 700, cursor: "help" }} title="Minimum savings rate: CMS shares nothing until savings beat this margin — a noise gate, sized by ACO population for one-sided BASIC tracks, electable down to 0% for two-sided.">does not qualify: under the {msr.toFixed(1)}% minimum savings rate · nothing shared</span>)}
+                  ? <span style={{ color: T.inkFaint, cursor: "help" }} title="A hurdle, not a deductible: clear it and the ACO shares in ALL savings under the benchmark, from the first dollar (42 CFR 425.605(d)).">qualifies: {grossPct.toFixed(1)}% ≥ {msr.toFixed(1)}% minimum savings rate ✓</span>
+                  : <span style={{ color: T.fail, fontWeight: 700, cursor: "help" }} title="Nothing is shared until savings beat this margin. For two-sided tracks the same elected number is also the minimum LOSS rate, so the band that costs you small wins also shields you from small losses.">does not qualify: under the {msr.toFixed(1)}% minimum savings rate · nothing shared</span>)}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 {fin.gross >= 0 ? (
@@ -1160,6 +1160,14 @@ export default function AppPlusPathwayLab() {
                       : mach.status === "FAILED"
                         ? <span style={{ color: T.fail, fontWeight: 700 }}>quality standard not met · nothing shared</span>
                         : <span style={{ color: T.inkFaint }}>full rate — quality standard met {mach.status === "DEEMED" ? "(deemed)" : "(by score)"}</span>}
+                  </>
+                ) : TRACKS[track].loss !== "none" && msr > 0 && Math.abs(grossPct) < msr ? (
+                  <>
+                    <span style={{ fontSize: 10, color: T.inkFaint }}>LOSS RAIL</span>
+                    <b style={{ fontSize: 20, lineHeight: 1, color: T.money }}>owes nothing</b>
+                    <span style={{ color: T.money, cursor: "help" }} title="The elected MSR/MLR is symmetrical: the same number that gates savings also shields against losses. Inside the band nothing settles in either direction — this protection is the only reason to elect a higher number.">
+                      inside the ±{msr.toFixed(1)}% deadband — the elected rate cuts both ways
+                    </span>
                   </>
                 ) : TRACKS[track].loss === "none" ? (
                   <>
