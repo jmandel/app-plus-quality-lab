@@ -417,9 +417,13 @@ function settle(mach: Machine, fin: FinInputs): Settlement {
   // applied here to the lab's compressed q scale.
   const lossPct = tr.loss === "none" ? 0 : tr.loss === "flat30" ? 30 : Math.min(75, Math.max(40, 100 - 0.75 * mach.q));
   const gross = (fin.grossPct / 100) * fin.benchmarkM;
-  // Shared savings require beating the ACO's minimum savings rate (42 CFR 425.605(a)(6)).
-  const savings$ = gross > 0 && fin.grossPct >= fin.msr ? (sharePct / 100) * gross : 0;
-  const losses$ = gross < 0 ? (lossPct / 100) * gross : 0;
+  // The MSR/MLR is a symmetrical DEADBAND, not a deductible: clear it and you share (or owe) from
+  // the first dollar — "a shared savings payment of X percent of ALL the savings under the updated
+  // benchmark" (42 CFR 425.605(d)(1)(iii)(A)); inside it, nothing moves in either direction.
+  // Two-sided elections set both edges at once (425.605(b)(2), 425.610(b)(1)): MLR = −MSR.
+  const inBand = Math.abs(fin.grossPct) < fin.msr;
+  const savings$ = gross > 0 && !inBand ? (sharePct / 100) * gross : 0;
+  const losses$ = gross < 0 && !inBand ? (lossPct / 100) * gross : 0;
   const net$ = savings$ + losses$;
   return { sharePct, lossPct, gross, savings$, losses$, net$ };
 }
@@ -1001,8 +1005,11 @@ export default function AppPlusPathwayLab() {
                   ACOs do elect theirs — at application or renewal, fixed for the whole agreement period, choosing
                   zero, a 0.5–2.0% value in 0.5% increments, or the same sliding scale (425.605(b)(2),
                   425.610(b)(1)). That election is <b>symmetrical</b>: the identical number becomes the minimum
-                  loss rate, so electing 0% means sharing from the first dollar and owing from the first dollar.
-                  The loss-side gate is not modeled here. A Step 1 preset resets all of these.
+                  loss rate. Both edges are gates, not deductibles: clear the band and you share (or owe) on the
+                  full amount from the first dollar. So a higher election buys exactly one thing — a wider
+                  no-man's-land where a random bad year costs nothing — at the price of forfeiting the small
+                  wins. Electing 0% means sharing from the first dollar and owing from the first dollar. A Step 1
+                  preset resets all of these.
                 </Info>
               </div>
               <div>
