@@ -706,7 +706,116 @@ CMS has simply never done this for eCQM vs MIPS CQM.
 
 ## 5. Task 4 — Denominator vs numerator effects
 
-*(pending — see agent findings integration)*
+**Verdict: our model's framing is right in sign. Denominator *case-finding* leakage
+flatters measured rates, so it cannot explain an eCQM-below-registry gap — it partially
+*masks* one. But there is a second, opposite denominator effect (missing-data treatment)
+that does hurt eCQM reporters, and it is the one CMS actually documents.**
+
+Four distinct denominator forces operate, and they do not point the same way.
+
+### 5.1 Case-finding leakage — flatters eCQM rates (our UI note is correct)
+
+A patient whose diagnosis is never coded is invisible to the measure and drops out of the
+denominator entirely. The question is whether those patients are better or worse controlled
+than the visible ones. The evidence says worse — undiagnosed means untreated:
+
+- **Adediran E, et al. "Risk factors of undiagnosed and uncontrolled hypertension in primary
+  care patients with hypertension: a cross-sectional study." *BMC Prim Care.*
+  2024;25:311. doi:10.1186/s12875-024-02511-4. PMID 39164618.** Reported by the research
+  agent as finding roughly **29% of true hypertensives were uncoded** in primary care data.
+- **Chapman AB, et al. "Association of documented high blood pressure measurements with time
+  to hypertension diagnosis." *Am J Med.* 2026;139:189-195.e2.
+  doi:10.1016/j.amjmed.2025.09.024. PMID 41005387.** Reported as finding **~75% still
+  undiagnosed at 5 years** despite documented elevated readings.
+
+Patients with undiagnosed, uncoded hypertension are by construction untreated and
+uncontrolled. Excluding them from measure 236's denominator therefore **raises** the
+measured control rate. Same logic for undiagnosed diabetes and measure 001.
+
+**Consequence: denominator leakage biases eCQM rates UPWARD.** It is a confound working
+*against* the gap we observe, which means the true capture penalty is somewhat larger than
+the measured gap — not smaller. Our UI text at `PathwayLab.tsx:941-942` ("invisible patients
+skew unscreened and uncontrolled … that often flatters rates") states this correctly, and
+leaving it unmodeled is conservative in the right direction.
+
+### 5.2 Missing-data treatment — hurts eCQM rates, and this is the documented one
+
+The opposite-signed denominator effect is the one from §4.1a: a patient whose numerator
+status cannot be determined **stays in the eCQM denominator as a failure**, but is
+**removed from the MIPS CQM performance-rate denominator**. CMS's own example puts the
+eCQM denominator at 950 and the MIPS CQM denominator at 900 for the same population.
+
+This is formally a denominator effect, though it is mathematically identical to the
+numerator haircut our model implements (§4.1a). **This is the single best-documented
+mechanism in the entire evidence base, and it is CMS's own.**
+
+### 5.3 Denominator identification is generally *more* accurate than numerator capture
+
+Where studies decompose eCQM error into denominator and numerator components, the
+denominator is the better-behaved half:
+
+- **Schmaltz SP, et al. "Comparison of electronic versus manual abstraction for 2
+  standardized perinatal care measures." *J Am Med Inform Assoc.* 2022;29(5):789-797.
+  doi:10.1093/jamia/ocab276. PMID 34918098.**
+- **Phipps MS, et al. "Validation of Stroke Meaningful Use Measures in a National Electronic
+  Health Record System." *J Gen Intern Med.* 2016;31(Suppl 1):46-52.
+  doi:10.1007/s11606-015-3562-5. PMID 26951273.** Retrospective cross-sectional comparison
+  of stroke eCQMs against chart review in 2,130 ischemic stroke admissions across 11 VHA
+  hospitals, explicitly designed to "determine sources of error in using centralized
+  electronic health record (EHR) data."
+
+Both are reported by the research agent as finding denominators more accurate than
+numerators. **I verified the citations but did not read the full texts**, so treat the
+denominator-vs-numerator decomposition as agent-reported rather than independently confirmed.
+
+**Important caution on a citation we might have reached for:** **Kern LM, et al. "Accuracy
+of electronically reported 'meaningful use' clinical quality measures: a cross-sectional
+study." *Ann Intern Med.* 2013;158(2):77-83.
+doi:10.7326/0003-4819-158-2-201301150-00001. PMID 23318309** is **numerator-focused and
+does not support a denominator decomposition**. It also contains a *counterexample* to our
+thesis: electronic reporting **overestimated** diabetes cholesterol control (57% vs 37% by
+manual review). Do not cite Kern as evidence that eCQMs under-measure — it cuts both ways.
+
+### 5.4 All-payer denominator expansion — hurts, and CMS quantifies it
+
+CMS, CY2025 PFS final rule, **89 FR 98436**:
+
+> "An internal analysis of performance year 2022 submission data indicates that Shared
+> Savings Program ACOs reported on **33 times more denominator eligible patients for
+> eCQM 001** …, **53 times more** … for eCQM 134 …, and **25 times more** … for eCQM 236 …
+> **than other MIPS reporters.** In performance year 2022, one ACO reported on **over
+> 700,000 denominator eligible beneficiaries** for a single eCQM."
+
+A denominator 25–53× larger necessarily reaches patients with thinner records, weaker
+attachment to the practice, and less complete data — the CY2027 proposed Medicare eCQM
+exists precisely because ACOs report the all-payer population "would capture beneficiaries
+with **no primary care relationship**" (91 FR 44048–44049).
+
+**This is a real effect our model does not represent for the eCQM pathway.** We apply the
+Medicare-population shift only to the `medcqm`/`medecqm` pathways. Note it explains the
+*Web Interface* comparison in §3.2 far better than it explains eCQM vs MIPS CQM, since both
+of those are all-payer by rule (§7.1).
+
+### 5.5 Patient-matching attrition — direction unknown
+
+The CMS APP guidance requires patient matching at "90% or higher," and unmatched patients
+are **dropped from the initial population entirely** (agent-reported from the APP guidance).
+No public estimate exists of whether dropped-unmatched patients differ in performance.
+**Unmeasured and unmeasurable from public data.**
+
+### 5.6 Net
+
+| Force | Direction on measured eCQM rate | Modeled by us? |
+|---|---|---|
+| Case-finding leakage (uncoded diagnosis) | **UP** (flatters) | No — noted in UI, correctly |
+| Missing-data treatment (§4.1a) | **DOWN** | Yes — this *is* our capture slider |
+| All-payer denominator expansion | **DOWN** | No (only on Medicare pathways) |
+| Patient-matching attrition | unknown | No |
+
+The net observed gap is what survives after the flattering force partially offsets the two
+depressing ones. **Our single numerator-side slider is a defensible reduced form**, and
+because the omitted forces are mixed in sign with the largest omission (case-finding
+leakage) working *against* the gap, our estimate is more likely conservative than inflated.
 
 ---
 
@@ -773,21 +882,126 @@ Two findings, both damaging to the case-mix explanation:
 **Verdict: CONTRADICTED as the driver of the gap.** Case mix differs across collection
 types, but in the direction opposite to the observed gap.
 
-### 7.3 Reporter selection and composition — SUPPORTED as a partial explanation
+### 7.3 Reporter selection and composition — STRONGLY SUPPORTED, and larger than we thought
 
-This one is real, and we had not accounted for it. §3.3 shows the national MIPS CQM
-benchmark (134 average 89.55) is not reproduced by MSSP ACOs reporting MIPS CQM (56.32).
-Different kinds of organizations choose different methods, and the national benchmark files
-compare *methods entangled with organizations*.
+This is real, large, and we had not accounted for it. §3.3 already showed the national MIPS
+CQM benchmark for 134 (average 89.55) is not reproduced by MSSP ACOs reporting MIPS CQM
+(56.32). The research agent's analysis of the PY2024 QPP Experience PUF (n=443,222
+clinicians, assigning each a modal collection type) quantifies why:
 
-Within MSSP the composition differences are visible but modest in size: eCQM ACOs skew
-two-sided (29 of 38 in ENHANCED/BASIC-E vs 7 of 14 for MIPS CQM) and are more evenly split
-on revenue (21 low / 17 high vs 12 low / 2 high).
+| Primary collection type | clinicians | median practice size | % in small practices |
+|---|---|---|---|
+| CMS Web Interface | 90,817 | 1,417 | 0.0% |
+| **eCQM** | 241,330 | **557** | 9.3% |
+| **MIPS CQM** | 78,339 | **85** | 22.6% |
+| QCDR | 28,855 | 92 | 11.9% |
+| Medicare Part B Claims | 3,881 | 3 | 100.0% |
 
-**Verdict: SUPPORTED as a contributor to the *national benchmark* gap; does NOT explain the
-within-MSSP abstraction gap**, which persists among organizations matched on risk score.
+**eCQM reporters sit in practices ~6.6× larger than MIPS CQM reporters**, and among
+clinicians using exactly one of the two, the eCQM share rises monotonically with size —
+**45.8% at 2–15 clinicians vs 89.6% at 500+**. (Agent-computed from the QPP Experience PUF;
+I did not independently reproduce this, and CMS discontinued its published collection-type
+share table after PY2021, so there is no CMS cross-tab to check it against.)
 
-### 7.4 What distinguishes capture from selection, and which way the evidence falls
+Corroborating peer-reviewed work:
+- **Johnston KJ, et al. *JAMA.* 2020;324(10):984-992** — system-affiliated practices scored
+  79.0 vs 60.3 mean MIPS final score.
+- **Rula EY, et al. *Health Affairs Scholar.* 2026;4(4):qxag061** — 137 of 275 measures
+  topped out; more than half reported by fewer than 5% of relevant physicians; median
+  reporting rate 7.1%.
+
+**Verdict: SUPPORTED as a major contributor to the *national benchmark* gap. Does NOT
+explain the within-MSSP abstraction gap** (§3.2), which persists among organizations matched
+on HCC risk score, nor the cross-measure gradient (§2.5), which the same reporters produce.
+
+### 7.4 Benchmark-pool endogeneity — the biggest unresolved confound
+
+MIPS benchmarks are historical with a two-year lag, so the eCQM benchmarks our simulator
+uses were built from whoever was reporting eCQMs two years earlier. In MSSP that pool was
+tiny and self-selected:
+
+| PY | Total ACOs | Web Interface | eCQM / MIPS CQM |
+|---|---|---|---|
+| 2021 | 475 | 466 | **12** (5 eCQM) |
+| 2022 | 482 | 457 | 37 |
+| 2023 | 453 | 418 | 72 |
+| 2024 | 476 | 392 | 167 |
+
+(Agent-compiled from MSSP results PUFs, corroborated at 89 FR 98102.)
+
+**The PY2025/PY2026 eCQM benchmarks therefore encode the performance of an early-transition
+vanguard with immature data pipelines** — organizations that had *just* stood up eCQM
+reporting. That is exactly the population in which capture loss should be worst, which means
+the published eCQM benchmarks may overstate the steady-state capture penalty. This confound
+cannot be corrected from public data and should be stated plainly in the app.
+
+### 7.5 Gaming and collection-type shopping — SUPPORTED, and codified
+
+**42 CFR § 414.1380(b)(1)(i)** contains an explicit max-selection rule: clinicians who submit
+"data … on a single measure via multiple collection types are scored only on the data
+submission with the **greatest number of measure achievement points**." CMS therefore
+guarantees that hedging is free.
+
+Reporters use it. **91 MSSP ACOs in PY2024 reported both routes, and had the highest mean
+quality score of any group (85.36)** — above Web-Interface-only (84.08) and far above
+digital-only (69.62). (Agent-computed from the PY2024 PUF.)
+
+§ 414.1340(d) separately prohibits "unrepresentative" selective submission — CMS
+acknowledging the risk exists precisely where partial submission is possible (MIPS CQM),
+which is not possible for eCQMs.
+
+Supporting evidence:
+- **Roberts ET, et al. "Changes in patient experiences and assessment of gaming among large
+  clinician practices in precursors of the Merit-Based Incentive Payment System."
+  *JAMA Health Forum.* 2021;2(10):e213105. doi:10.1001/jamahealthforum.2021.3105.
+  PMID 34841400** — top- vs bottom-quintile practices selected their CAHPS measures 96.3%
+  vs 67.9% of the time (+28.4 pp, P=0.004), "consistent with gaming."
+- **GAO-22-104667** (2021-10-01), `https://www.gao.gov/products/gao-22-104667` — "providers
+  choosing to report on quality measures on which they are performing well, rather than on
+  measures in areas where they may need improvement."
+- **CMS itself**, 81 FR 77278: separate benchmarks by collection type "creates opportunities
+  for clinicians to achieve higher quality scores by **selectively choosing submission
+  mechanisms**."
+- **CMS**, 90 FR 50002: MIPS groups "**can choose which eCQMs and MIPS CQMs they report on
+  and tend to choose those they will perform well on**" — whereas ACOs must report the whole
+  APP Plus set.
+
+**This matters directly for our claim.** eCQM reporting under APP Plus is mandatory and
+all-or-nothing; MIPS CQM reporting nationally is selective. Part of the national benchmark
+gap is registry reporters *choosing their best measures*, which is not a capture effect at
+all.
+
+### 7.6 Multi-EHR aggregation — SUPPORTED, and CMS conceded it in regulation
+
+CMS created the Complex Organization Adjustment (§ 414.1380(b)(1)(vii)(C)) specifically for
+multi-TIN/multi-EHR entities, citing "challenges aggregating patient data from multiple TINs,
+data deduplication, and interoperability between different health IT/EHR systems"
+(89 FR 98435–98436). CMS's own simulation, CY2026 PFS final rule **90 FR 49808**: had the CoA
+applied in PY2024, quality scores for the 18 affected ACOs would have risen **about 6
+percentage points on average**.
+
+Also on point, **86 FR 65257–65258**: a NAACOS survey found **77% of ACOs "do not have the
+infrastructure in place to aggregate data"** across all payers.
+
+### 7.7 MedPAC — supports non-comparability generally, but says nothing about eCQM vs MIPS CQM
+
+**MedPAC, March 2018 Report to the Congress, Ch. 15, p. 452**
+(`https://www.medpac.gov/wp-content/uploads/import_data/scrape_files/docs/default-source/reports/mar18_medpac_ch15_sec.pdf`):
+
+> "**clinicians who achieve the same performance level on the same quality measure can
+> receive a different score based on the method with which they choose to report** (e.g., by
+> means of a registry or EHR)."
+
+Also p. 446 ("MIPS scores are not comparable among clinicians"), p. 453 (score maximization
+by "reporting measures through relatively less commonly used reporting methods"), p. 455
+("MIPS fails to meet these standards"); March 2026 Ch. 4, pp. 118–119 on measure selection
+"as a strategy to maximize their performance score."
+
+**Honest limit: MedPAC has never addressed eCQM vs MIPS CQM vs Medicare CQM comparability or
+the all-payer APP denominator.** Its critique is general and must not be represented as
+being about our specific question.
+
+### 7.8 What distinguishes capture from selection, and which way the evidence falls
 
 Three discriminating tests, all available here:
 
@@ -801,7 +1015,7 @@ Three discriminating tests, all available here:
 shows selection inflates the national benchmark gap.** Both are real; they operate at
 different levels.
 
-### 7.5 What I could not test
+### 7.9 What I could not test
 
 - **No within-organization data.** Nothing here measures the same ACO both ways in the same
   year (only 3 ACOs reported both, too few, and the PUF does not indicate whether they

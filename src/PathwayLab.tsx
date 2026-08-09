@@ -1024,11 +1024,11 @@ export default function AppPlusPathwayLab() {
                 </div>
                 <div style={{ margin: "8px 0 3px", fontSize: 10, ...mono, color: T.inkSoft }}>CMS-SCORED MEASURES (decile points)</div>
                 {([
-                  { k: "cahps" as const, label: "CAHPS survey" },
-                  { k: "claims1" as const, label: "479 readmits" },
-                  { k: "claims2" as const, label: "484 chronic" },
+                  { k: "cahps" as const, label: "CAHPS survey", tip: "CAHPS for MIPS: a patient-experience survey a CMS-approved vendor administers to a sample of the ACO's beneficiaries (timely care, clinician communication, care coordination, courteous staff). The ACO pays the vendor but submits nothing itself. Failing to administer it is one of the two conditions that can fail the quality standard outright." },
+                  { k: "claims1" as const, label: "479 readmits", tip: "Measure 479 — Hospital-Wide All-Cause Unplanned Readmission (HWR) for clinician groups: CMS computes a risk-standardized 30-day readmission rate straight from claims. Inverse (lower is better) and an OUTCOME measure, so it can satisfy the deeming outcome condition." },
+                  { k: "claims2" as const, label: "484 chronic", tip: "Measure 484 — Risk-standardized acute, unplanned hospital admissions for patients with multiple chronic conditions: also computed by CMS from claims, also inverse and an OUTCOME measure. Rewards keeping complex patients out of the hospital." },
                 ]).map((f) => (
-                  <label key={f.k} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, ...mono, color: T.inkSoft, marginBottom: 3 }}>
+                  <label key={f.k} title={f.tip} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, ...mono, color: T.inkSoft, marginBottom: 3, cursor: "help" }}>
                     <span style={{ width: 100, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.label}</span>
                     <input type="range" min={0} max={10} value={fixedPts[f.k]} onChange={(e) => setFixedPts({ ...fixedPts, [f.k]: +e.target.value })} style={{ flex: 1, accentColor: T.fixed }} aria-label={f.label} />
                     <b style={{ width: 56, color: T.ink, whiteSpace: "nowrap", textAlign: "right" }}>{fixedPts[f.k]} pts</b>
